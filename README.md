@@ -6,11 +6,13 @@ An AI-powered Next.js application for extracting and managing resume data from P
 
 - 🔐 **Authentication**: Secure email/password authentication with NextAuth.js
 - 📤 **PDF Upload**: Drag-and-drop PDF upload with file validation
-- 📄 **Text Extraction**: Automatic text extraction from text-based PDFs
-- 📊 **Dashboard**: View and manage uploaded resumes
+- 🤖 **AI-Powered Extraction**: OpenAI GPT-4 and Vision for intelligent data extraction
+- 📄 **Text & Image PDFs**: Support for both text-based and image-based resumes
+- 📊 **Structured Data**: Extracts profile, experience, education, skills, and more
 - 🗄️ **Database**: PostgreSQL with Prisma ORM
 - 🎨 **Modern UI**: Built with TailwindCSS
 - 🔔 **Notifications**: Toast notifications with Sonner
+- ✅ **Type Safety**: Full TypeScript with strict ENUM validation
 
 ## Tech Stack
 
@@ -19,7 +21,8 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - **Authentication**: NextAuth.js v5
 - **Database**: PostgreSQL (via Supabase)
 - **ORM**: Prisma
-- **PDF Processing**: pdf-parse
+- **AI**: OpenAI GPT-4o (text & vision)
+- **PDF Processing**: pdf-parse, pdf-to-img
 - **Styling**: TailwindCSS
 - **Form Validation**: Zod + React Hook Form
 - **Notifications**: Sonner
@@ -96,9 +99,13 @@ pdf-scraper/
 │   ├── auth.ts             # NextAuth configuration
 │   ├── prisma.ts           # Prisma client
 │   ├── pdf-utils.ts        # PDF text extraction utilities
+│   ├── openai-service.ts   # OpenAI integration (GPT-4 & Vision)
+│   ├── pdf-to-image.ts     # PDF to image conversion
 │   └── validations/        # Zod schemas
 ├── prisma/
 │   └── schema.prisma       # Database schema
+├── types/
+│   └── resume.ts           # Resume data types & ENUMs
 └── middleware.ts           # Protected routes middleware
 ```
 
@@ -216,13 +223,115 @@ Comprehensive error handling for:
 
 All errors display user-friendly messages via toast notifications.
 
-## Next Steps (Phase 3)
+## Phase 3 Completed ✅
 
-- AI-powered resume parsing with OpenAI
-- OCR support for image-based PDFs
-- Structured data extraction (name, email, skills, experience)
+- ✅ OpenAI GPT-4 integration for text-based PDFs
+- ✅ OpenAI GPT-4 Vision for image-based PDFs
+- ✅ Structured data extraction with exact JSON schema
+- ✅ Support for all resume sections:
+  - Profile (name, email, headline, summary, etc.)
+  - Work experiences with ENUMs (employment type, location type)
+  - Education with degree ENUMs
+  - Skills array
+  - Licenses and certifications
+  - Languages with proficiency levels
+  - Achievements
+  - Publications
+  - Honors and awards
+- ✅ Robust error handling (rate limits, timeouts, API errors)
+- ✅ Processing status indicators
+- ✅ Data validation and storage
+
+## OpenAI Integration Details
+
+### Resume Data Extraction
+
+The application uses OpenAI's latest models with structured outputs to extract comprehensive resume data:
+
+**For Text-based PDFs**:
+- Uses GPT-4o with structured output
+- Extracts text using pdf-parse
+- Sends cleaned text to OpenAI
+- Returns validated JSON matching exact schema
+
+**For Image-based PDFs**:
+- Converts PDF pages to images (max 10 pages)
+- Uses GPT-4o Vision API
+- Processes images with OCR capabilities
+- Returns structured JSON data
+
+**For Hybrid PDFs**:
+- Attempts text extraction first
+- Falls back to vision processing if needed
+- Combines best of both approaches
+
+### Extracted Data Structure
+
+The system extracts the following information:
+
+```typescript
+{
+  profile: {
+    name, surname, email, headline,
+    professionalSummary, linkedIn, website,
+    country, city, relocation, remote
+  },
+  workExperiences: [{
+    jobTitle, employmentType, locationType,
+    company, startMonth, startYear,
+    endMonth, endYear, current, description
+  }],
+  educations: [{
+    school, degree, major,
+    startYear, endYear, current, description
+  }],
+  skills: ["JavaScript", "React", ...],
+  licenses: [{ name, issuer, issueYear, description }],
+  languages: [{ language, level }],
+  achievements: [{ title, organization, achieveDate, description }],
+  publications: [{ title, publisher, publicationDate, publicationUrl, description }],
+  honors: [{ title, issuer, issueMonth, issueYear, description }]
+}
+```
+
+### ENUM Values
+
+The system enforces strict ENUM values:
+
+- **Employment Type**: FULL_TIME, PART_TIME, INTERNSHIP, CONTRACT
+- **Location Type**: ONSITE, REMOTE, HYBRID
+- **Degree**: HIGH_SCHOOL, ASSOCIATE, BACHELOR, MASTER, DOCTORATE
+- **Language Level**: BEGINNER, INTERMEDIATE, ADVANCED, NATIVE
+
+### Error Handling
+
+Comprehensive error handling for:
+- ✅ OpenAI API errors
+- ✅ Rate limiting (429 errors)
+- ✅ Request timeouts
+- ✅ Invalid API keys
+- ✅ Invalid JSON responses
+- ✅ Missing required fields
+- ✅ Network failures
+
+All errors return user-friendly messages via toast notifications.
+
+### Processing Flow
+
+1. **Upload PDF** → File validation
+2. **Extract Content** → Text or image extraction
+3. **Send to OpenAI** → GPT-4 or GPT-4 Vision
+4. **Receive Structured JSON** → Validated against schema
+5. **Save to Database** → Linked to authenticated user
+6. **Success Notification** → User can view results
+
+## Next Steps (Phase 4)
+
 - Resume history management with search/filter
-- Export functionality (JSON, CSV)
+- Detailed resume view page
+- Export functionality (JSON, CSV, PDF)
+- Bulk upload support
+- Resume comparison features
 
 ## License
 
