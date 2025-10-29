@@ -5,6 +5,7 @@ import { extractTextFromPDF, validatePDFBuffer, cleanExtractedText } from '@/lib
 import { extractResumeFromText, extractResumeFromImages, validateResumeData } from '@/lib/openai-service'
 import { convertPDFPagesToImages } from '@/lib/pdf-to-image'
 import { checkRateLimit, RateLimitError } from '@/lib/rate-limit'
+import { hasEnoughCredits, deductCredits, CREDIT_COST_PER_RESUME } from '@/lib/stripe-service'
 import type { ResumeData } from '@/types/resume'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -17,6 +18,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // Check credits before processing
+    const hasCredits = await hasEnoughCredits(session.user.id, CREDIT_COST_PER_RESUME)
+    if (!hasCredits) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Insufficient credits. Please subscribe to a plan to continue processing resumes.',
+          insufficientCredits: true
+        },
+        { status: 402 } // Payment Required
       )
     }
 
@@ -185,6 +199,12 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Deduct credits after successful processing
+    const creditsDeducted = await deductCredits(session.user.id, CREDIT_COST_PER_RESUME)
+    if (!creditsDeducted) {
+      console.warn(`Failed to deduct credits for user ${session.user.id}`)
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -195,6 +215,7 @@ export async function POST(request: NextRequest) {
         processingMethod,
         status: 'processed',
         resumeData,
+        creditsUsed: CREDIT_COST_PER_RESUME,
       },
     })
   } catch (error) {

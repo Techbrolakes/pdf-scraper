@@ -13,6 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -22,6 +28,12 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  
+  // Subscription fields
+  credits               Int       @default(0)
+  planType              PlanType  @default(FREE)
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
   
   accounts      Account[]
   sessions      Session[]
