@@ -54,7 +54,7 @@ export function DashboardSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function ResumeHistorySkeleton() {
@@ -83,5 +83,5 @@ export function ResumeHistorySkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }

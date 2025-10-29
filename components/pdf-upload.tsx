@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const LARGE_FILE_THRESHOLD = 4 * 1024 * 1024 // 4MB
@@ -241,6 +241,17 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
           ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
         onClick={!isLoading ? handleButtonClick : undefined}
+        role="button"
+        tabIndex={isLoading ? -1 : 0}
+        onKeyDown={(e) => {
+          if (!isLoading && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault()
+            handleButtonClick()
+          }
+        }}
+        aria-label="Upload PDF file"
+        aria-busy={isLoading}
+        aria-disabled={isLoading}
       >
         <input
           ref={fileInputRef}
@@ -249,6 +260,7 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
           onChange={handleFileInput}
           disabled={isLoading}
           className="hidden"
+          aria-label="PDF file input"
         />
 
         {isLoading ? (

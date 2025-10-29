@@ -4,6 +4,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 
 ## Features
 
+### Core Features
 - 🔐 **Authentication**: Secure email/password authentication with NextAuth.js
 - 📤 **PDF Upload**: Drag-and-drop PDF upload with file validation
 - 🤖 **AI-Powered Extraction**: OpenAI GPT-4 and Vision for intelligent data extraction
@@ -11,8 +12,17 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - 📊 **Structured Data**: Extracts profile, experience, education, skills, and more
 - 🗄️ **Database**: PostgreSQL with Prisma ORM
 - 🎨 **Modern UI**: Built with TailwindCSS
-- 🔔 **Notifications**: Toast notifications with Sonner
 - ✅ **Type Safety**: Full TypeScript with strict ENUM validation
+
+### Phase 6 Enhancements (NEW! ✨)
+- 🚨 **Error Handling**: Comprehensive error boundaries and user-friendly error pages
+- 🚦 **Rate Limiting**: Database-based rate limiting (10 uploads/hour per user)
+- 🔔 **Enhanced Toasts**: Rich notifications with icons and descriptions
+- ⏳ **Loading States**: Skeleton loaders and progress indicators
+- 📭 **Empty States**: Helpful empty state components with actions
+- ♿ **Accessibility**: WCAG AA compliant with keyboard navigation and screen reader support
+- ⚡ **Performance**: Code splitting, lazy loading, and performance utilities
+- 📚 **Documentation**: Comprehensive guides and usage examples
 
 ## Tech Stack
 
@@ -403,7 +413,40 @@ All errors return user-friendly messages via toast notifications.
 - **Days Active**: Number of days since account creation
 - **Visual Stats**: Color-coded stat cards
 
-## Next Steps (Phase 6)
+## Phase 6 Documentation
+
+Phase 6 has been completed with comprehensive error handling, loading states, and UI polish. See detailed documentation:
+
+- 📖 [**Phase 6 Summary**](./PHASE6_SUMMARY.md) - Complete overview of all improvements
+- 📋 [**Phase 6 Improvements**](./PHASE6_IMPROVEMENTS.md) - Detailed feature documentation
+- 💡 [**Quick Reference**](./QUICK_REFERENCE.md) - Developer quick reference card
+- 📚 [**Usage Examples**](./docs/USAGE_EXAMPLES.md) - Code examples and patterns
+- 🔄 [**Migration Guide**](./docs/MIGRATION_GUIDE.md) - How to update existing code
+- 🧪 [**Testing Guide**](./docs/TESTING_GUIDE.md) - Comprehensive testing procedures
+
+### Quick Start with Phase 6 Features
+
+```typescript
+// Enhanced toast notifications
+import { toast } from '@/lib/toast'
+toast.success('Upload complete!')
+toast.error('Upload failed', { description: 'Please try again' })
+
+// Button with loading state
+import { Button } from '@/components/ui/button'
+<Button isLoading={uploading} loadingText="Uploading...">Upload</Button>
+
+// Error boundary
+import { ErrorBoundary } from '@/components/error-boundary'
+<ErrorBoundary><YourComponent /></ErrorBoundary>
+
+// Check rate limit
+const res = await fetch('/api/rate-limit')
+const { data } = await res.json()
+console.log(`${data.remaining} uploads remaining`)
+```
+
+## Future Enhancements
 
 - Advanced analytics dashboard
 - Resume comparison features
@@ -411,6 +454,10 @@ All errors return user-friendly messages via toast notifications.
 - Export to PDF/CSV formats
 - Email notifications
 - API access for integrations
+- Redis-based rate limiting
+- Error tracking service integration (Sentry)
+- Progressive Web App features
+- Internationalization support
 
 ## License
 

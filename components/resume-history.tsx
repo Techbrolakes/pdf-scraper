@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ResumeDetailModal } from './resume-detail-modal'
 import type { ResumeData } from '@/types/resume'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 interface ResumeHistoryItem {
   id: string
@@ -100,6 +100,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                     setCurrentPage(1)
                   }}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+                  aria-label="Search resumes by filename"
                 />
                 <svg
                   className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
@@ -121,6 +122,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                aria-label="Sort resumes"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
