@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { extractTextFromPDF, validatePDFBuffer, cleanExtractedText } from '@/lib/pdf-utils'
 import { extractResumeFromText, extractResumeFromImages, validateResumeData } from '@/lib/openai-service'
 import { convertPDFPagesToImages } from '@/lib/pdf-to-image'
+import { checkRateLimit, RateLimitError } from '@/lib/rate-limit'
 import type { ResumeData } from '@/types/resume'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -17,6 +18,30 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       )
+    }
+
+    // Check rate limit
+    try {
+      await checkRateLimit(session.user.id)
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: error.message,
+            retryAfter: error.retryAfter
+          },
+          { 
+            status: 429,
+            headers: {
+              'Retry-After': error.retryAfter.toString(),
+              'X-RateLimit-Limit': '10',
+              'X-RateLimit-Remaining': '0',
+            }
+          }
+        )
+      }
+      throw error
     }
 
     // Parse form data
