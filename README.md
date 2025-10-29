@@ -5,6 +5,8 @@ An AI-powered Next.js application for extracting and managing resume data from P
 ## Features
 
 - 🔐 **Authentication**: Secure email/password authentication with NextAuth.js
+- 📤 **PDF Upload**: Drag-and-drop PDF upload with file validation
+- 📄 **Text Extraction**: Automatic text extraction from text-based PDFs
 - 📊 **Dashboard**: View and manage uploaded resumes
 - 🗄️ **Database**: PostgreSQL with Prisma ORM
 - 🎨 **Modern UI**: Built with TailwindCSS
@@ -17,6 +19,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - **Authentication**: NextAuth.js v5
 - **Database**: PostgreSQL (via Supabase)
 - **ORM**: Prisma
+- **PDF Processing**: pdf-parse
 - **Styling**: TailwindCSS
 - **Form Validation**: Zod + React Hook Form
 - **Notifications**: Sonner
@@ -77,19 +80,22 @@ pdf-scraper/
 │   │   ├── login/          # Login page
 │   │   └── register/       # Registration page
 │   ├── (dashboard)/
-│   │   ├── dashboard/      # Main dashboard
+│   │   ├── dashboard/      # Main dashboard with PDF upload
 │   │   ├── settings/       # User settings
 │   │   └── layout.tsx      # Dashboard layout with nav
 │   ├── api/
-│   │   └── auth/           # Auth API routes
+│   │   ├── auth/           # Auth API routes
+│   │   └── upload/         # PDF upload API route
 │   ├── layout.tsx          # Root layout
 │   └── page.tsx            # Home page (redirects)
 ├── components/
 │   ├── ui/                 # Reusable UI components
+│   ├── pdf-upload.tsx      # PDF upload component
 │   └── sign-out-button.tsx
 ├── lib/
 │   ├── auth.ts             # NextAuth configuration
 │   ├── prisma.ts           # Prisma client
+│   ├── pdf-utils.ts        # PDF text extraction utilities
 │   └── validations/        # Zod schemas
 ├── prisma/
 │   └── schema.prisma       # Database schema
@@ -145,13 +151,78 @@ The application uses NextAuth.js v5 with:
 - ✅ Settings page
 - ✅ Protected routes middleware
 
-## Next Steps (Phase 2)
+## Phase 2 Completed ✅
 
-- PDF upload functionality
-- Resume parsing with AI
-- Data extraction and storage
-- Resume history management
-- Export functionality
+- ✅ PDF upload component with drag-and-drop
+- ✅ File validation (type, size, structure)
+- ✅ Loading states with progress indicators
+- ✅ Toast notifications for all upload states
+- ✅ API route for file uploads (`/api/upload`)
+- ✅ PDF text extraction using pdf-parse
+- ✅ Support for different PDF types:
+  - Text-based PDFs: Direct text extraction
+  - Image-based PDFs: Detection (OCR in Phase 3)
+  - Hybrid PDFs: Combined approach
+- ✅ Server-side validation and error handling
+- ✅ File metadata storage in database
+- ✅ Automatic dashboard refresh after upload
+
+## PDF Upload Implementation Details
+
+### File Size Handling
+
+The application handles files of different sizes efficiently:
+
+- **Files ≤4MB**: Processed directly through the API route
+- **Files >4MB**: Use XMLHttpRequest with progress tracking for better user experience
+- **Maximum file size**: 10MB (configurable)
+
+### Upload Flow
+
+1. **Client-side validation**:
+   - File type check (must be `.pdf`)
+   - File size check (max 10MB)
+   - Empty file check
+
+2. **Server-side processing**:
+   - Authentication verification
+   - File validation (type, size, PDF structure)
+   - PDF text extraction
+   - PDF type detection (text-based, image-based, hybrid)
+   - Metadata storage in database
+
+3. **User feedback**:
+   - Real-time progress indicators
+   - Toast notifications for success/error states
+   - Automatic dashboard refresh on success
+
+### PDF Type Detection
+
+The system automatically detects PDF types based on text density:
+
+- **Text-based**: >100 characters per page - Direct text extraction
+- **Hybrid**: 10-100 characters per page - Partial text extraction
+- **Image-based**: <10 characters per page - Requires OCR (Phase 3)
+
+### Error Handling
+
+Comprehensive error handling for:
+- Invalid file types
+- Oversized files (>10MB)
+- Empty files
+- Corrupted PDFs
+- Network errors
+- Server processing errors
+
+All errors display user-friendly messages via toast notifications.
+
+## Next Steps (Phase 3)
+
+- AI-powered resume parsing with OpenAI
+- OCR support for image-based PDFs
+- Structured data extraction (name, email, skills, experience)
+- Resume history management with search/filter
+- Export functionality (JSON, CSV)
 
 ## License
 

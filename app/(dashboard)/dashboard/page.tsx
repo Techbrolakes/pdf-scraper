@@ -1,5 +1,20 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { PDFUpload } from '@/components/pdf-upload'
+import { revalidatePath } from 'next/cache'
+
+type ResumeHistory = {
+  id: string
+  userId: string
+  fileName: string
+  uploadedAt: Date
+  resumeData: unknown
+}
+
+async function refreshDashboard() {
+  'use server'
+  revalidatePath('/dashboard')
+}
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -29,11 +44,11 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg
                   className="h-6 w-6 text-gray-400"
                   fill="none"
@@ -62,36 +77,8 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Upload New
-                  </dt>
-                  <dd className="text-sm text-gray-900">
-                    Coming soon...
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
+        <div className="lg:col-span-2">
+          <PDFUpload onUploadSuccess={refreshDashboard} />
         </div>
       </div>
 
@@ -106,14 +93,14 @@ export default async function DashboardPage() {
         ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul className="divide-y divide-gray-200">
-              {recentResumes.map((resume) => (
+              {recentResumes.map((resume: ResumeHistory) => (
                 <li key={resume.id}>
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-blue-600 truncate">
                         {resume.fileName}
                       </p>
-                      <div className="ml-2 flex-shrink-0 flex">
+                      <div className="ml-2 shrink-0 flex">
                         <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                           Processed
                         </p>
