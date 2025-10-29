@@ -1,15 +1,11 @@
+import { Suspense } from 'react'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PDFUpload } from '@/components/pdf-upload'
+import { ResumeHistory } from '@/components/resume-history'
+import { DashboardSkeleton } from '@/components/loading-skeleton'
+import { deleteResume } from '@/app/actions/resume-actions'
 import { revalidatePath } from 'next/cache'
-
-type ResumeHistory = {
-  id: string
-  userId: string
-  fileName: string
-  uploadedAt: Date
-  resumeData: unknown
-}
 
 async function refreshDashboard() {
   'use server'
@@ -19,24 +15,39 @@ async function refreshDashboard() {
 export default async function DashboardPage() {
   const session = await auth()
   
-  const resumeCount = await prisma.resumeHistory.count({
-    where: {
-      userId: session?.user?.id,
-    },
-  })
+  const [resumeCount, allResumes, recentResume] = await Promise.all([
+    prisma.resumeHistory.count({
+      where: {
+        userId: session?.user?.id,
+      },
+    }),
+    prisma.resumeHistory.findMany({
+      where: {
+        userId: session?.user?.id,
+      },
+      orderBy: {
+        uploadedAt: 'desc',
+      },
+    }),
+    prisma.resumeHistory.findFirst({
+      where: {
+        userId: session?.user?.id,
+      },
+      orderBy: {
+        uploadedAt: 'desc',
+      },
+    }),
+  ])
 
-  const recentResumes = await prisma.resumeHistory.findMany({
-    where: {
-      userId: session?.user?.id,
-    },
-    orderBy: {
-      uploadedAt: 'desc',
-    },
-    take: 5,
-  })
+  const handleDelete = async (id: string) => {
+    'use server'
+    await deleteResume(id)
+    revalidatePath('/dashboard')
+  }
 
   return (
     <div className="px-4 py-6 sm:px-0">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="mt-2 text-gray-600">
@@ -44,13 +55,15 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Stats and Upload Section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
+        {/* Total Resumes Stat */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="shrink-0">
                 <svg
-                  className="h-6 w-6 text-gray-400"
+                  className="h-6 w-6 text-blue-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -77,49 +90,55 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2">
+        {/* Most Recent Upload Stat */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="shrink-0">
+                <svg
+                  className="h-6 w-6 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Most Recent
+                  </dt>
+                  <dd className="text-sm font-semibold text-gray-900 truncate">
+                    {recentResume
+                      ? new Date(recentResume.uploadedAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      : 'No uploads yet'}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Upload Area */}
+        <div className="lg:col-span-1">
           <PDFUpload onUploadSuccess={refreshDashboard} />
         </div>
       </div>
 
+      {/* Resume History */}
       <div className="mt-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Recent Uploads
-        </h2>
-        {recentResumes.length === 0 ? (
-          <div className="bg-white shadow rounded-lg p-6 text-center text-gray-500">
-            No resumes uploaded yet. Start by uploading your first PDF!
-          </div>
-        ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {recentResumes.map((resume: ResumeHistory) => (
-                <li key={resume.id}>
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-blue-600 truncate">
-                        {resume.fileName}
-                      </p>
-                      <div className="ml-2 shrink-0 flex">
-                        <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Processed
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex">
-                        <p className="flex items-center text-sm text-gray-500">
-                          Uploaded on{' '}
-                          {new Date(resume.uploadedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <Suspense fallback={<DashboardSkeleton />}>
+          <ResumeHistory resumes={allResumes} onDelete={handleDelete} />
+        </Suspense>
       </div>
     </div>
   )
