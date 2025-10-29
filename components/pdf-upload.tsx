@@ -111,7 +111,7 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
       body: formData,
     })
 
-    setUploadState(prev => ({ ...prev, progress: 60, message: 'Processing...' }))
+    setUploadState(prev => ({ ...prev, progress: 60, message: 'Extracting data...' }))
 
     if (!response.ok) {
       const error = await response.json()
@@ -149,7 +149,7 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
             ...prev, 
             progress: 70, 
             isProcessing: true,
-            message: 'Processing...' 
+            message: 'Analyzing resume...' 
           }))
 
           try {
