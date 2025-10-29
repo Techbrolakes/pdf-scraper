@@ -5,6 +5,7 @@ import { ProfileSection } from '@/components/settings/profile-section'
 import { PasswordSection } from '@/components/settings/password-section'
 import { AccountSection } from '@/components/settings/account-section'
 import { StatsSection } from '@/components/settings/stats-section'
+import { SubscriptionSection } from '@/components/settings/subscription-section'
 
 export default async function SettingsPage() {
   const session = await auth()
@@ -25,7 +26,7 @@ export default async function SettingsPage() {
     )
   }
 
-  const { name, email, createdAt, totalResumes } = statsResult.data
+  const { name, email, createdAt, totalResumes, credits, planType, hasStripeCustomer } = statsResult.data
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -41,6 +42,13 @@ export default async function SettingsPage() {
       <div className="space-y-6">
         {/* Usage Statistics */}
         <StatsSection totalResumes={totalResumes} createdAt={createdAt} />
+
+        {/* Subscription & Credits */}
+        <SubscriptionSection 
+          credits={credits} 
+          planType={planType} 
+          hasStripeCustomer={hasStripeCustomer}
+        />
 
         {/* Profile Information */}
         <ProfileSection initialName={name} email={email} />

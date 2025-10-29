@@ -154,6 +154,9 @@ export async function getUserStats() {
           createdAt: true,
           email: true,
           name: true,
+          credits: true,
+          planType: true,
+          stripeCustomerId: true,
         },
       }),
       prisma.resumeHistory.count({
@@ -172,6 +175,9 @@ export async function getUserStats() {
         name: user.name,
         createdAt: user.createdAt,
         totalResumes: resumeCount,
+        credits: user.credits,
+        planType: user.planType,
+        hasStripeCustomer: !!user.stripeCustomerId,
       },
     }
   } catch (error) {

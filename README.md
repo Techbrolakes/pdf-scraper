@@ -14,7 +14,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - 🎨 **Modern UI**: Built with TailwindCSS
 - ✅ **Type Safety**: Full TypeScript with strict ENUM validation
 
-### Phase 6 Enhancements (NEW! ✨)
+### Phase 6 Enhancements ✨
 - 🚨 **Error Handling**: Comprehensive error boundaries and user-friendly error pages
 - 🚦 **Rate Limiting**: Database-based rate limiting (10 uploads/hour per user)
 - 🔔 **Enhanced Toasts**: Rich notifications with icons and descriptions
@@ -23,6 +23,16 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - ♿ **Accessibility**: WCAG AA compliant with keyboard navigation and screen reader support
 - ⚡ **Performance**: Code splitting, lazy loading, and performance utilities
 - 📚 **Documentation**: Comprehensive guides and usage examples
+
+### Phase 7 - Stripe Integration (NEW! 💳)
+- 💰 **Subscription Plans**: Basic ($10/month) and Pro ($20/month) plans
+- 🎫 **Credit System**: 100 credits per resume extraction
+- 💳 **Stripe Checkout**: Secure hosted checkout flow
+- 🔄 **Webhook Handling**: Automated subscription and payment processing
+- 📊 **Usage Tracking**: Real-time credit balance display
+- ⚠️ **Credit Warnings**: Low credit and no credit alerts
+- 🎛️ **Billing Portal**: Manage subscriptions and payment methods
+- 🔒 **Payment Security**: PCI-compliant payment processing
 
 ## Tech Stack
 
@@ -33,6 +43,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - **ORM**: Prisma
 - **AI**: OpenAI GPT-4o (text & vision)
 - **PDF Processing**: pdf-parse, pdf-to-img
+- **Payments**: Stripe (subscriptions & webhooks)
 - **Styling**: TailwindCSS
 - **Form Validation**: Zod + React Hook Form
 - **Notifications**: Sonner
@@ -65,10 +76,22 @@ cp .env.example .env
 
 Edit `.env` and add your configuration:
 ```env
+# Database
 DATABASE_URL="postgresql://user:password@localhost:5432/pdf_scraper?schema=public"
+
+# NextAuth
 NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
+
+# OpenAI
 OPENAI_API_KEY="your-openai-api-key-here"
+
+# Stripe (Optional - for subscription features)
+STRIPE_SECRET_KEY="sk_test_your-stripe-secret-key-here"
+STRIPE_PUBLIC_KEY="pk_test_your-stripe-public-key-here"
+STRIPE_WEBHOOK_SECRET="whsec_your-webhook-secret-here"
+STRIPE_PRICE_BASIC="price_basic_plan_id"
+STRIPE_PRICE_PRO="price_pro_plan_id"
 ```
 
 4. Generate Prisma client and run migrations:
@@ -446,6 +469,261 @@ const { data } = await res.json()
 console.log(`${data.remaining} uploads remaining`)
 ```
 
+## Phase 7: Stripe Integration Setup
+
+### Overview
+
+Phase 7 adds a complete subscription and credit system using Stripe. Users can subscribe to plans that provide credits for resume processing.
+
+### Subscription Plans
+
+- **FREE**: 0 credits (default for new users)
+- **BASIC**: $10/month - 10,000 credits (~100 resume extractions)
+- **PRO**: $20/month - 20,000 credits (~200 resume extractions)
+
+Each resume extraction costs **100 credits**.
+
+### Stripe Setup Instructions
+
+#### 1. Create a Stripe Account
+
+1. Go to [https://stripe.com](https://stripe.com) and sign up
+2. Complete account verification
+3. Switch to **Test Mode** (toggle in top right)
+
+#### 2. Get API Keys
+
+1. Navigate to **Developers** → **API Keys**
+2. Copy your **Publishable key** (starts with `pk_test_`)
+3. Copy your **Secret key** (starts with `sk_test_`)
+4. Add them to your `.env` file:
+
+```env
+STRIPE_SECRET_KEY="sk_test_your_key_here"
+STRIPE_PUBLIC_KEY="pk_test_your_key_here"
+```
+
+#### 3. Create Subscription Products
+
+1. Go to **Products** → **Add Product**
+2. Create two products:
+
+**Basic Plan:**
+- Name: "Basic Plan"
+- Description: "10,000 credits per month"
+- Pricing: $10.00 USD / month (recurring)
+- Copy the **Price ID** (starts with `price_`)
+
+**Pro Plan:**
+- Name: "Pro Plan"
+- Description: "20,000 credits per month"
+- Pricing: $20.00 USD / month (recurring)
+- Copy the **Price ID** (starts with `price_`)
+
+3. Add the Price IDs to your `.env`:
+
+```env
+STRIPE_PRICE_BASIC="price_1234567890"
+STRIPE_PRICE_PRO="price_0987654321"
+```
+
+#### 4. Set Up Webhooks
+
+Webhooks are required for automated subscription management.
+
+**For Local Development (using Stripe CLI):**
+
+1. Install Stripe CLI:
+```bash
+# macOS
+brew install stripe/stripe-cli/stripe
+
+# Windows (with Scoop)
+scoop install stripe
+
+# Linux
+# Download from https://github.com/stripe/stripe-cli/releases
+```
+
+2. Login to Stripe CLI:
+```bash
+stripe login
+```
+
+3. Forward webhooks to your local server:
+```bash
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
+
+4. Copy the webhook signing secret (starts with `whsec_`) and add to `.env`:
+```env
+STRIPE_WEBHOOK_SECRET="whsec_your_secret_here"
+```
+
+**For Production:**
+
+1. Go to **Developers** → **Webhooks** → **Add endpoint**
+2. Endpoint URL: `https://yourdomain.com/api/webhooks/stripe`
+3. Select events to listen to:
+   - `invoice.paid`
+   - `invoice.payment_failed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `checkout.session.completed`
+4. Copy the **Signing secret** and add to production environment variables
+
+#### 5. Test the Integration
+
+**Test Cards:**
+- Success: `4242 4242 4242 4242`
+- Decline: `4000 0000 0000 0002`
+- Requires authentication: `4000 0025 0000 3155`
+
+Use any future expiry date, any 3-digit CVC, and any ZIP code.
+
+**Testing Flow:**
+
+1. Start your development server:
+```bash
+npm run dev
+```
+
+2. In another terminal, start Stripe webhook forwarding:
+```bash
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
+
+3. Register/login to your app
+4. Go to Settings page
+5. Click "Subscribe to Basic Plan" or "Subscribe to Pro Plan"
+6. Complete checkout with test card `4242 4242 4242 4242`
+7. Verify:
+   - Credits are added to your account
+   - Plan type is updated
+   - You can process resumes
+
+**Test Webhook Events:**
+
+```bash
+# Test successful payment
+stripe trigger invoice.paid
+
+# Test subscription cancellation
+stripe trigger customer.subscription.deleted
+```
+
+### Credit System Integration
+
+The credit system is automatically integrated with resume processing:
+
+1. **Before Processing**: Checks if user has ≥100 credits
+2. **If Insufficient**: Returns 402 error with message to subscribe
+3. **After Success**: Deducts 100 credits from user's balance
+4. **Dashboard Display**: Shows credit balance with color-coded warnings
+
+**Credit Warnings:**
+- **Green** (≥500 credits): Normal operation
+- **Orange** (<500 credits): Low credit warning
+- **Red** (0 credits): No credits - processing blocked
+
+### Database Schema Changes
+
+The User model now includes:
+
+```prisma
+model User {
+  // ... existing fields
+  credits               Int       @default(0)
+  planType              PlanType  @default(FREE)
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+}
+
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+}
+```
+
+Run migration after pulling:
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### API Routes
+
+**Checkout Session:**
+- `POST /api/checkout/session` - Create Stripe checkout session
+
+**Billing Portal:**
+- `POST /api/billing/portal` - Access Stripe customer portal
+
+**Webhooks:**
+- `POST /api/webhooks/stripe` - Handle Stripe webhook events
+
+### Features
+
+#### Settings Page
+- View current plan and credit balance
+- Subscribe to Basic or Pro plan
+- Upgrade/downgrade plans
+- Manage billing via Stripe Customer Portal
+- Cancel subscription
+
+#### Dashboard
+- Credit balance display with plan type
+- Color-coded credit warnings
+- Low credit alerts (<500 credits)
+- No credit alerts (0 credits)
+- Links to settings for subscription
+
+#### Resume Processing
+- Pre-processing credit check
+- Automatic credit deduction after success
+- Insufficient credit error handling
+- Credit usage tracking
+
+### Webhook Events Handled
+
+- `invoice.paid` - Add credits when subscription payment succeeds
+- `invoice.payment_failed` - Log payment failures
+- `customer.subscription.updated` - Update plan when subscription changes
+- `customer.subscription.deleted` - Downgrade to FREE when cancelled
+- `checkout.session.completed` - Log successful checkouts
+
+### Troubleshooting
+
+**Webhook not receiving events:**
+- Ensure Stripe CLI is running: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+- Check webhook signing secret matches `.env`
+- Verify endpoint URL is correct
+
+**Credits not added after payment:**
+- Check webhook logs in Stripe Dashboard
+- Verify Price IDs match in `.env`
+- Check server logs for errors
+
+**Checkout session fails:**
+- Verify API keys are correct
+- Ensure Price IDs exist in Stripe
+- Check NEXTAUTH_URL is set correctly
+
+**Production deployment:**
+- Add webhook endpoint in Stripe Dashboard
+- Use production API keys (starts with `pk_live_` and `sk_live_`)
+- Set all environment variables in production
+- Test with real card in test mode first
+
+### Security Notes
+
+- Never commit `.env` file with real API keys
+- Use test mode for development
+- Webhook signatures are verified automatically
+- All payment processing happens on Stripe's secure servers
+- No credit card data is stored in your database
+
 ## Future Enhancements
 
 - Advanced analytics dashboard
@@ -458,6 +736,9 @@ console.log(`${data.remaining} uploads remaining`)
 - Error tracking service integration (Sentry)
 - Progressive Web App features
 - Internationalization support
+- One-time credit purchases
+- Team/organization plans
+- Usage analytics and reporting
 
 ## License
 
