@@ -40,12 +40,15 @@ export async function POST(req: NextRequest) {
 
     // Handle the event
     switch (event.type) {
-      case 'invoice.paid': {
+      case 'invoice.paid':
+      case 'invoice.payment_succeeded':
+      case 'invoice_payment.paid': {
         const invoice = event.data.object as Stripe.Invoice;
         
-        // Only process subscription invoices
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const invoiceData = invoice as any;
+        
+        // Only process subscription invoices
         if (invoiceData.subscription && invoiceData.customer) {
           const subscriptionId = typeof invoiceData.subscription === 'string' 
             ? invoiceData.subscription 
@@ -65,8 +68,11 @@ export async function POST(req: NextRequest) {
               subscription.id,
               priceId
             );
-            console.log(`Processed payment for subscription ${subscription.id}`);
+          } else {
+            console.error('No price ID found in subscription');
           }
+        } else {
+          console.log('Invoice is not a subscription invoice, skipping');
         }
         break;
       }
@@ -74,7 +80,23 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         console.error(`Payment failed for invoice ${invoice.id}`);
-        // You could send an email notification here
+        break;
+      }
+
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const priceId = subscription.items.data[0]?.price.id;
+        const customerId = typeof subscription.customer === 'string' 
+          ? subscription.customer 
+          : subscription.customer.id;
+
+        if (priceId && subscription.status === 'active') {
+          await handleSubscriptionPayment(
+            customerId,
+            subscription.id,
+            priceId
+          );
+        }
         break;
       }
 
@@ -84,7 +106,6 @@ export async function POST(req: NextRequest) {
 
         if (priceId && subscription.status === 'active') {
           await handleSubscriptionUpdate(subscription.id, priceId);
-          console.log(`Updated subscription ${subscription.id}`);
         }
         break;
       }
@@ -92,7 +113,6 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         await handleSubscriptionCancellation(subscription.id);
-        console.log(`Cancelled subscription ${subscription.id}`);
         break;
       }
 

@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         fileName: file.name,
-        resumeData: processedData,
+        resumeData: JSON.parse(JSON.stringify(processedData)),
       },
     })
 
@@ -275,8 +275,5 @@ export async function POST(request: NextRequest) {
 }
 
 // Configure route to handle larger payloads
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+export const runtime = 'nodejs'
+export const maxDuration = 60 // 60 seconds max execution time
