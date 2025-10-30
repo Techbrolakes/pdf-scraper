@@ -6,6 +6,7 @@ import { ResumeHistory } from '@/components/resume-history'
 import { DashboardSkeleton } from '@/components/loading-skeleton'
 import { deleteResume } from '@/app/actions/resume-actions'
 import { revalidatePath } from 'next/cache'
+import type { ResumeData } from '@/types/resume'
 
 async function refreshDashboard() {
   'use server'
@@ -50,6 +51,18 @@ export default async function DashboardPage() {
 
   const credits = user?.credits || 0
   const planType = user?.planType || 'FREE'
+
+  // Transform resumes data to match expected type
+  const typedResumes = allResumes.map((resume) => ({
+    ...resume,
+    resumeData: resume.resumeData as unknown as {
+      pdfType: string
+      pages: number
+      processingMethod: string
+      status: string
+      resumeData: ResumeData
+    },
+  }))
 
   const handleDelete = async (id: string) => {
     'use server'
@@ -222,7 +235,7 @@ export default async function DashboardPage() {
       {/* Resume History */}
       <div className="mt-8">
         <Suspense fallback={<DashboardSkeleton />}>
-          <ResumeHistory resumes={allResumes} onDelete={handleDelete} />
+          <ResumeHistory resumes={typedResumes} onDelete={handleDelete} />
         </Suspense>
       </div>
     </div>
