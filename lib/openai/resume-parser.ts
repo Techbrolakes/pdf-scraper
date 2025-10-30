@@ -1,9 +1,6 @@
-import OpenAI from "openai";
-import type { ResumeData } from "@/types/resume";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_KEY,
-});
+import { openai, MODELS } from './client';
+import { PDFExtractionResult } from '../pdf/types';
+import { ResumeData } from '@/types/resume';
 
 const SYSTEM_PROMPT = `You are an expert resume parser. Extract ALL information from the resume and return it in the exact JSON format specified.
 
@@ -231,24 +228,21 @@ const RESUME_SCHEMA = {
   additionalProperties: false,
 };
 
-/**
- * Extract resume data from text using GPT-4
- */
-export async function extractResumeFromText(text: string): Promise<ResumeData> {
+export async function parseResumeFromText(text: string): Promise<ResumeData> {
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-2024-08-06",
+    const response = await openai.chat.completions.create({
+      model: MODELS.GPT4,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: 'system', content: SYSTEM_PROMPT },
         {
-          role: "user",
-          content: `Extract all information from this resume:\n\n${text}`,
-        },
+          role: 'user',
+          content: `Extract all information from this resume:\n\n${text}`
+        }
       ],
       response_format: {
-        type: "json_schema",
+        type: 'json_schema',
         json_schema: {
-          name: "resume_extraction",
+          name: 'resume_extraction',
           strict: true,
           schema: RESUME_SCHEMA,
         },
@@ -257,70 +251,64 @@ export async function extractResumeFromText(text: string): Promise<ResumeData> {
       max_tokens: 4096,
     });
 
-    const content = completion.choices[0]?.message?.content;
+    const content = response.choices[0]?.message?.content;
     if (!content) {
-      throw new Error("No response from OpenAI");
+      throw new Error('No response from OpenAI');
     }
 
-    const resumeData = JSON.parse(content) as ResumeData;
-    return resumeData;
+    return JSON.parse(content) as ResumeData;
   } catch (error) {
-    console.error("OpenAI text extraction error:", error);
+    console.error('OpenAI parsing error:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("rate_limit")) {
-        throw new Error(
-          "OpenAI rate limit exceeded. Please try again in a moment."
-        );
+      if (error.message.includes('rate_limit')) {
+        throw new Error('OpenAI rate limit exceeded. Please try again in a moment.');
       }
-      if (error.message.includes("timeout")) {
-        throw new Error("Request timed out. Please try again.");
+      if (error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please try again.');
       }
-      if (error.message.includes("invalid_api_key")) {
-        throw new Error("OpenAI API key is invalid.");
+      if (error.message.includes('invalid_api_key')) {
+        throw new Error('OpenAI API key is invalid.');
       }
     }
 
-    throw new Error("Failed to extract resume data from text.");
+    throw new Error('Failed to parse resume with OpenAI');
   }
 }
 
-/**
- * Extract resume data from images using GPT-4 Vision
- */
-export async function extractResumeFromImages(
-  imageUrls: string[]
-): Promise<ResumeData> {
+export async function parseResumeFromImages(images: string[]): Promise<ResumeData> {
   try {
-    // Create content array with text and images
-    const content: Array<
-      | { type: "text"; text: string }
-      | { type: "image_url"; image_url: { url: string } }
-    > = [
-      {
-        type: "text",
-        text: "Extract all information from this resume image(s) and return it in the specified JSON format. Be thorough and extract ALL visible information.",
-      },
-    ];
+    // Prepare image messages for Vision API
+    const imageMessages = images.slice(0, 10).map(base64Image => ({
+      type: 'image_url' as const,
+      image_url: {
+        url: `data:image/jpeg;base64,${base64Image}`,
+        detail: 'high' as const
+      }
+    }));
 
-    // Add all images
-    for (const url of imageUrls) {
-      content.push({
-        type: "image_url",
-        image_url: { url },
-      });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-2024-08-06",
+    const response = await openai.chat.completions.create({
+      model: MODELS.GPT4_VISION,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content },
+        {
+          role: 'system',
+          content: SYSTEM_PROMPT
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Extract all information from this resume image(s) and return it in the specified JSON format. Be thorough and extract ALL visible information.'
+            },
+            ...imageMessages
+          ]
+        }
       ],
       response_format: {
-        type: "json_schema",
+        type: 'json_schema',
         json_schema: {
-          name: "resume_extraction",
+          name: 'resume_extraction',
           strict: true,
           schema: RESUME_SCHEMA,
         },
@@ -329,65 +317,47 @@ export async function extractResumeFromImages(
       max_tokens: 4096,
     });
 
-    const responseContent = completion.choices[0]?.message?.content;
-    if (!responseContent) {
-      throw new Error("No response from OpenAI Vision");
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No response from OpenAI Vision');
     }
 
-    const resumeData = JSON.parse(responseContent) as ResumeData;
-    return resumeData;
+    return JSON.parse(content) as ResumeData;
   } catch (error) {
-    console.error("OpenAI vision extraction error:", error);
+    console.error('OpenAI Vision parsing error:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("rate_limit")) {
-        throw new Error(
-          "OpenAI rate limit exceeded. Please try again in a moment."
-        );
+      if (error.message.includes('rate_limit')) {
+        throw new Error('OpenAI rate limit exceeded. Please try again in a moment.');
       }
-      if (error.message.includes("timeout")) {
-        throw new Error("Request timed out. Please try again.");
+      if (error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please try again.');
       }
-      if (error.message.includes("invalid_api_key")) {
-        throw new Error("OpenAI API key is invalid.");
+      if (error.message.includes('invalid_api_key')) {
+        throw new Error('OpenAI API key is invalid.');
       }
     }
 
-    throw new Error("Failed to extract resume data from images.");
+    throw new Error('Failed to parse resume images with OpenAI Vision');
   }
 }
 
-/**
- * Validate that the extracted data matches the schema
- */
-export function validateResumeData(data: unknown): data is ResumeData {
-  if (!data || typeof data !== "object") {
-    console.error("Validation failed: data is not an object", data);
-    return false;
+export async function parseResume(
+  extractionResult: PDFExtractionResult
+): Promise<ResumeData> {
+  if (!extractionResult.success) {
+    throw new Error(extractionResult.error || 'PDF extraction failed');
   }
 
-  const resume = data as Partial<ResumeData>;
-
-  // Check required top-level fields
-  if (
-    !resume.profile ||
-    !Array.isArray(resume.workExperiences) ||
-    !Array.isArray(resume.educations)
-  ) {
-    console.error("Validation failed: missing required fields", {
-      hasProfile: !!resume.profile,
-      hasWorkExperiences: Array.isArray(resume.workExperiences),
-      hasEducations: Array.isArray(resume.educations),
-      actualData: resume,
-    });
-    return false;
+  // Text-based or hybrid with good text content
+  if (extractionResult.hasText && extractionResult.text) {
+    return await parseResumeFromText(extractionResult.text);
   }
 
-  // Basic profile validation
-  if (typeof resume.profile !== "object") {
-    console.error("Validation failed: profile is not an object");
-    return false;
+  // Image-based
+  if (extractionResult.hasImages && extractionResult.images) {
+    return await parseResumeFromImages(extractionResult.images);
   }
 
-  return true;
+  throw new Error('No extractable content found in PDF');
 }

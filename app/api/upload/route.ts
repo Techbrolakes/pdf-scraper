@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { extractTextFromPDF, validatePDFBuffer, cleanExtractedText } from '@/lib/pdf-utils'
+import { extractFromPDF } from '@/lib/pdf/extractor'
 import { extractResumeFromText, extractResumeFromImages, validateResumeData } from '@/lib/openai-service'
-import { convertPDFPagesToImages } from '@/lib/pdf-to-image'
 import { checkRateLimit, RateLimitError } from '@/lib/rate-limit'
 import { hasEnoughCredits, deductCredits, CREDIT_COST_PER_RESUME } from '@/lib/stripe-service'
 import type { ResumeData } from '@/types/resume'
@@ -99,75 +98,54 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Validate PDF structure
-    if (!validatePDFBuffer(buffer)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid or corrupted PDF file.' },
-        { status: 400 }
-      )
-    }
-
-    // Extract text from PDF
-    const extractionResult = await extractTextFromPDF(buffer)
+    // Extract content from PDF (automatically detects type)
+    console.log('Extracting PDF content...')
+    const extractionResult = await extractFromPDF(buffer)
 
     if (!extractionResult.success) {
       return NextResponse.json(
         { 
           success: false, 
-          error: extractionResult.error || 'Failed to process PDF.' 
+          error: extractionResult.error || 'Failed to extract content from PDF.' 
         },
         { status: 500 }
       )
     }
 
-    // Process with OpenAI based on PDF type
+    // Parse resume with OpenAI (automatically uses text or vision based on extraction)
+    console.log('Parsing resume with OpenAI...')
     let resumeData: ResumeData
     let processingMethod: string
 
-    if (extractionResult.pdfType === 'text-based' || extractionResult.pdfType === 'hybrid') {
-      // Text-based or hybrid PDF - use GPT-4 for text extraction
-      const cleanedText = cleanExtractedText(extractionResult.text || '')
-      
-      if (!cleanedText || cleanedText.length < 50) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Insufficient text content in PDF. The file may be corrupted or image-based.' 
-          },
-          { status: 400 }
-        )
-      }
-
-      resumeData = await extractResumeFromText(cleanedText)
-      processingMethod = 'text'
-    } else if (extractionResult.pdfType === 'image-based') {
-      // Image-based PDF - use GPT-4 Vision
-      const images = await convertPDFPagesToImages(buffer, 10) // Max 10 pages for cost control
-      
-      if (images.length === 0) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Failed to convert PDF to images for processing.' 
-          },
-          { status: 500 }
-        )
-      }
-
-      resumeData = await extractResumeFromImages(images)
-      processingMethod = 'vision'
-    } else {
-      // Unknown type - try text first, fallback to vision
-      const cleanedText = cleanExtractedText(extractionResult.text || '')
-      
-      if (cleanedText && cleanedText.length >= 50) {
-        resumeData = await extractResumeFromText(cleanedText)
+    try {
+      // Use text extraction if we have text content
+      if (extractionResult.hasText && extractionResult.text) {
+        console.log('Using text-based extraction with GPT-4o')
+        resumeData = await extractResumeFromText(extractionResult.text)
         processingMethod = 'text'
-      } else {
-        const images = await convertPDFPagesToImages(buffer, 10)
-        resumeData = await extractResumeFromImages(images)
+      }
+      // Use vision extraction if we have images but no text
+      else if (extractionResult.hasImages && extractionResult.images) {
+        console.log('Using vision-based extraction with GPT-4o')
+        // Convert base64 images to data URLs
+        const imageUrls = extractionResult.images.map(
+          base64 => `data:image/jpeg;base64,${base64}`
+        )
+        resumeData = await extractResumeFromImages(imageUrls)
         processingMethod = 'vision'
       }
+      else {
+        throw new Error('No extractable content found in PDF')
+      }
+    } catch (error) {
+      console.error('Resume parsing error:', error)
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to parse resume data. Please ensure the PDF contains valid resume information.'
+        },
+        { status: 500 }
+      )
     }
 
     // Validate extracted data
@@ -183,8 +161,8 @@ export async function POST(request: NextRequest) {
 
     // Prepare data for storage
     const processedData = {
-      pdfType: extractionResult.pdfType,
-      pages: extractionResult.metadata?.pages || 0,
+      pdfType: extractionResult.hasText ? (extractionResult.hasImages ? 'hybrid' : 'text') : 'image',
+      pages: extractionResult.pageCount || 0,
       processingMethod,
       status: 'processed',
       resumeData,
@@ -195,7 +173,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         fileName: file.name,
-        resumeData: processedData,
+        resumeData: JSON.parse(JSON.stringify(processedData)),
       },
     })
 
@@ -210,8 +188,8 @@ export async function POST(request: NextRequest) {
       data: {
         id: resumeHistory.id,
         fileName: file.name,
-        pdfType: extractionResult.pdfType,
-        pages: extractionResult.metadata?.pages,
+        pdfType: processedData.pdfType,
+        pages: extractionResult.pageCount,
         processingMethod,
         status: 'processed',
         resumeData,
@@ -275,8 +253,5 @@ export async function POST(request: NextRequest) {
 }
 
 // Configure route to handle larger payloads
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+export const runtime = 'nodejs'
+export const maxDuration = 60 // 60 seconds max execution time
