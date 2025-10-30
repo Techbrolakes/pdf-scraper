@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signIn } from 'next-auth/react'
@@ -13,7 +12,6 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -32,6 +30,7 @@ export default function LoginPage() {
         email: data.email,
         password: data.password,
         redirect: false,
+        callbackUrl: '/dashboard',
       })
 
       if (result?.error) {
@@ -39,10 +38,13 @@ export default function LoginPage() {
         return
       }
 
-      toast.success('Logged in successfully')
-      router.push('/dashboard')
-      router.refresh()
+      if (result?.ok) {
+        toast.success('Logged in successfully')
+        // Use window.location for more reliable redirect on Vercel
+        window.location.href = '/dashboard'
+      }
     } catch (error) {
+      console.error('Login error:', error)
       toast.error('Something went wrong')
     } finally {
       setIsLoading(false)
@@ -54,7 +56,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Sign in to your account (next-auth)
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}

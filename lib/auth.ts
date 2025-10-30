@@ -13,6 +13,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   trustHost: true,
+  debug: process.env.NODE_ENV === "development",
   providers: [
     Credentials({
       name: "credentials",
