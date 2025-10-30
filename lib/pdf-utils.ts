@@ -1,5 +1,10 @@
-// @ts-expect-error - pdf-parse has type issues with ESM imports
-import pdf from 'pdf-parse'
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+import type { PDFDocumentProxy, TextItem } from 'pdfjs-dist/types/src/display/api'
+
+// Disable worker for server-side usage (Node.js doesn't support web workers)
+if (typeof window === 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+}
 
 export interface PDFExtractionResult {
   success: boolean
@@ -13,7 +18,7 @@ export interface PDFExtractionResult {
 }
 
 /**
- * Extract text from a PDF buffer
+ * Extract text from a PDF buffer using pdfjs-dist
  * Handles text-based PDFs with direct text extraction
  * For image-based PDFs, returns metadata for further processing
  */
@@ -21,19 +26,40 @@ export async function extractTextFromPDF(
   buffer: Buffer
 ): Promise<PDFExtractionResult> {
   try {
-    // Parse the PDF
-    const data = await pdf(buffer)
+    // Convert Buffer to Uint8Array for pdfjs-dist
+    const uint8Array = new Uint8Array(buffer)
+
+    // Load the PDF document
+    const loadingTask = pdfjsLib.getDocument({
+      data: uint8Array,
+      useSystemFonts: true,
+      standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/standard_fonts/`,
+    })
+    
+    const pdfDocument: PDFDocumentProxy = await loadingTask.promise
+    const pageCount = pdfDocument.numPages
+
+    // Extract metadata
+    const metadata = await pdfDocument.getMetadata()
+    
+    // Extract text from all pages
+    const textPromises: Promise<string>[] = []
+    for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+      textPromises.push(extractPageText(pdfDocument, pageNum))
+    }
+    
+    const pageTexts = await Promise.all(textPromises)
+    const fullText = pageTexts.join('\n\n')
 
     // Check if PDF has extractable text
-    const hasText = data.text && data.text.trim().length > 0
-    const pageCount = data.numpages
+    const hasText = fullText && fullText.trim().length > 0
 
     // Determine PDF type based on text content
     let pdfType: PDFExtractionResult['pdfType'] = 'unknown'
     
     if (hasText) {
       // Calculate text density (characters per page)
-      const textDensity = data.text.length / pageCount
+      const textDensity = fullText.length / pageCount
       
       if (textDensity > 100) {
         // Likely text-based PDF
@@ -50,12 +76,15 @@ export async function extractTextFromPDF(
       pdfType = 'image-based'
     }
 
+    // Clean up
+    await pdfDocument.destroy()
+
     return {
       success: true,
-      text: data.text,
+      text: fullText,
       metadata: {
         pages: pageCount,
-        info: data.info as Record<string, unknown>,
+        info: metadata.info as Record<string, unknown>,
       },
       pdfType,
     }
@@ -67,6 +96,32 @@ export async function extractTextFromPDF(
       pdfType: 'unknown',
       error: error instanceof Error ? error.message : 'Failed to extract text from PDF',
     }
+  }
+}
+
+/**
+ * Extract text from a single PDF page
+ * @param pdfDocument - The loaded PDF document
+ * @param pageNum - Page number (1-indexed)
+ * @returns Extracted text from the page
+ */
+async function extractPageText(
+  pdfDocument: PDFDocumentProxy,
+  pageNum: number
+): Promise<string> {
+  try {
+    const page = await pdfDocument.getPage(pageNum)
+    const textContent = await page.getTextContent()
+    
+    // Extract text items and join them
+    const textItems = textContent.items
+      .filter((item): item is TextItem => 'str' in item)
+      .map((item) => item.str)
+    
+    return textItems.join(' ')
+  } catch (error) {
+    console.error(`Error extracting text from page ${pageNum}:`, error)
+    return ''
   }
 }
 
@@ -102,11 +157,16 @@ export async function getPDFInfo(buffer: Buffer): Promise<{
       }
     }
 
-    const data = await pdf(buffer)
+    const uint8Array = new Uint8Array(buffer)
+    const loadingTask = pdfjsLib.getDocument({ data: uint8Array })
+    const pdfDocument = await loadingTask.promise
+    const pageCount = pdfDocument.numPages
+    
+    await pdfDocument.destroy()
     
     return {
       valid: true,
-      pages: data.numpages,
+      pages: pageCount,
     }
   } catch (error) {
     return {

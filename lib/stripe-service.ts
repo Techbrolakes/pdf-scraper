@@ -1,12 +1,12 @@
-import Stripe from 'stripe';
-import { prisma } from './prisma';
+import Stripe from "stripe";
+import { prisma } from "./prisma";
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set');
+  throw new Error("STRIPE_SECRET_KEY is not set");
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-09-30.clover',
+  apiVersion: "2025-09-30.clover",
   typescript: true,
 });
 
@@ -66,8 +66,8 @@ export async function createCheckoutSession(
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
-    mode: 'subscription',
-    payment_method_types: ['card'],
+    mode: "subscription",
+    payment_method_types: ["card"],
     line_items: [
       {
         price: priceId,
@@ -102,7 +102,10 @@ export async function createBillingPortalSession(
 /**
  * Add credits to a user's account
  */
-export async function addCredits(userId: string, credits: number): Promise<void> {
+export async function addCredits(
+  userId: string,
+  credits: number
+): Promise<void> {
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -116,7 +119,10 @@ export async function addCredits(userId: string, credits: number): Promise<void>
 /**
  * Deduct credits from a user's account
  */
-export async function deductCredits(userId: string, credits: number): Promise<boolean> {
+export async function deductCredits(
+  userId: string,
+  credits: number
+): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { credits: true },
@@ -141,7 +147,10 @@ export async function deductCredits(userId: string, credits: number): Promise<bo
 /**
  * Check if user has enough credits
  */
-export async function hasEnoughCredits(userId: string, requiredCredits: number): Promise<boolean> {
+export async function hasEnoughCredits(
+  userId: string,
+  requiredCredits: number
+): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { credits: true },
@@ -167,7 +176,7 @@ export async function getCreditBalance(userId: string): Promise<number> {
  */
 export async function updateUserPlan(
   userId: string,
-  planType: 'FREE' | 'BASIC' | 'PRO',
+  planType: "FREE" | "BASIC" | "PRO",
   subscriptionId?: string
 ): Promise<void> {
   await prisma.user.update({
@@ -197,11 +206,11 @@ export async function handleSubscriptionPayment(
   }
 
   // Determine plan type and credits based on price ID
-  let planType: 'BASIC' | 'PRO' = 'BASIC';
+  let planType: "BASIC" | "PRO" = "BASIC";
   let credits = PLAN_CREDITS.BASIC;
 
   if (priceId === process.env.STRIPE_PRICE_PRO) {
-    planType = 'PRO';
+    planType = "PRO";
     credits = PLAN_CREDITS.PRO;
   }
 
@@ -221,7 +230,9 @@ export async function handleSubscriptionPayment(
 /**
  * Handle subscription cancellation
  */
-export async function handleSubscriptionCancellation(subscriptionId: string): Promise<void> {
+export async function handleSubscriptionCancellation(
+  subscriptionId: string
+): Promise<void> {
   const user = await prisma.user.findUnique({
     where: { stripeSubscriptionId: subscriptionId },
   });
@@ -234,7 +245,7 @@ export async function handleSubscriptionCancellation(subscriptionId: string): Pr
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      planType: 'FREE',
+      planType: "FREE",
       stripeSubscriptionId: null,
     },
   });
@@ -256,10 +267,10 @@ export async function handleSubscriptionUpdate(
   }
 
   // Determine new plan type
-  let planType: 'BASIC' | 'PRO' = 'BASIC';
+  let planType: "BASIC" | "PRO" = "BASIC";
 
   if (priceId === process.env.STRIPE_PRICE_PRO) {
-    planType = 'PRO';
+    planType = "PRO";
   }
 
   // Update user's plan (don't add credits on update, only on payment)
