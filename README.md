@@ -133,7 +133,6 @@ pdf-scraper/
 │   ├── prisma.ts           # Prisma client
 │   ├── pdf-utils.ts        # PDF text extraction utilities
 │   ├── openai-service.ts   # OpenAI integration (GPT-4 & Vision)
-│   ├── pdf-to-image.ts     # PDF to image conversion
 │   └── validations/        # Zod schemas
 ├── prisma/
 │   └── schema.prisma       # Database schema
