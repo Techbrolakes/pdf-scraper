@@ -197,35 +197,6 @@ const featureItem = {
   color: "#4a5568",
 };
 
-const cta = {
-  margin: "32px 0",
-  textAlign: "center" as const,
-};
-
-const button = {
-  display: "inline-block",
-  padding: "14px 32px",
-  backgroundColor: "#1447E6",
-  color: "#ffffff",
-  textDecoration: "none",
-  borderRadius: "6px",
-  fontWeight: "600" as const,
-  fontSize: "16px",
-};
-
-const helpText = {
-  margin: "24px 0 0",
-  fontSize: "14px",
-  lineHeight: "20px",
-  color: "#718096",
-  textAlign: "center" as const,
-};
-
-const link = {
-  color: "#1447E6",
-  textDecoration: "none",
-};
-
 const divider = {
   margin: "0",
   borderColor: "#e2e8f0",
