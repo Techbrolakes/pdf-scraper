@@ -1,8 +1,11 @@
 import { analyzePDF, validatePDF } from './pdf-utils';
 import { extractTextFromPDF, cleanExtractedText } from './text-extractor';
-import { extractImagesFromPDF } from './image-extractor';
 import { PDFExtractionResult, PDFType } from './types';
 
+/**
+ * Extract content from PDF - Serverless compatible (text-only)
+ * Note: Image extraction disabled for Vercel deployment (requires native canvas module)
+ */
 export async function extractFromPDF(
   buffer: Buffer
 ): Promise<PDFExtractionResult> {
@@ -23,26 +26,26 @@ export async function extractFromPDF(
 
     console.log(`PDF Analysis: Type=${analysis.type}, Pages=${analysis.pageCount}, Images=${analysis.imageCount}`);
 
-    // Handle based on PDF type
-    switch (analysis.type) {
-      case PDFType.TEXT:
-        return await handleTextPDF(buffer);
-
-      case PDFType.IMAGE:
-        return await handleImagePDF(buffer);
-
-      case PDFType.HYBRID:
-        return await handleHybridPDF(buffer, analysis);
-
-      default:
-        return {
-          success: false,
-          pageCount: analysis.pageCount,
-          hasText: false,
-          hasImages: false,
-          error: 'Unable to determine PDF type',
-        };
+    // For serverless compatibility, only support text extraction
+    // Image-based PDFs will return an error with helpful message
+    if (analysis.type === PDFType.IMAGE) {
+      return {
+        success: false,
+        pageCount: analysis.pageCount,
+        hasText: false,
+        hasImages: true,
+        error: 'Image-based PDFs are not supported. Please upload a text-based PDF or convert your resume to a text-searchable format.',
+      };
     }
+
+    // Extract text from PDF
+    const result = await extractTextFromPDF(buffer);
+    
+    if (result.success && result.text) {
+      result.text = cleanExtractedText(result.text);
+    }
+    
+    return result;
   } catch (error) {
     console.error('PDF extraction error:', error);
     return {
@@ -53,36 +56,4 @@ export async function extractFromPDF(
       error: error instanceof Error ? error.message : 'Extraction failed',
     };
   }
-}
-
-async function handleTextPDF(buffer: Buffer): Promise<PDFExtractionResult> {
-  const result = await extractTextFromPDF(buffer);
-  
-  if (result.success && result.text) {
-    result.text = cleanExtractedText(result.text);
-  }
-  
-  return result;
-}
-
-async function handleImagePDF(buffer: Buffer): Promise<PDFExtractionResult> {
-  return await extractImagesFromPDF(buffer);
-}
-
-async function handleHybridPDF(
-  buffer: Buffer,
-  analysis: { pageCount: number }
-): Promise<PDFExtractionResult> {
-  // Extract both text and images
-  const textResult = await extractTextFromPDF(buffer);
-  const imageResult = await extractImagesFromPDF(buffer, 5); // Limit to 5 pages for cost
-
-  return {
-    success: true,
-    text: textResult.text ? cleanExtractedText(textResult.text) : undefined,
-    images: imageResult.images,
-    pageCount: analysis.pageCount,
-    hasText: textResult.hasText,
-    hasImages: imageResult.hasImages,
-  };
 }

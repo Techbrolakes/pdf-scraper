@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { extractFromPDF } from '@/lib/pdf/extractor'
-import { extractResumeFromText, extractResumeFromImages, validateResumeData } from '@/lib/openai-service'
+import { extractResumeFromText, validateResumeData } from '@/lib/openai-service'
 import { checkRateLimit, RateLimitError } from '@/lib/rate-limit'
 import { hasEnoughCredits, deductCredits, CREDIT_COST_PER_RESUME } from '@/lib/stripe-service'
 import type { ResumeData } from '@/types/resume'
@@ -112,30 +112,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse resume with OpenAI (automatically uses text or vision based on extraction)
+    // Parse resume with OpenAI (text-based only for serverless compatibility)
     console.log('Parsing resume with OpenAI...')
     let resumeData: ResumeData
     let processingMethod: string
 
     try {
-      // Use text extraction if we have text content
+      // Only text extraction is supported on Vercel
       if (extractionResult.hasText && extractionResult.text) {
         console.log('Using text-based extraction with GPT-4o')
         resumeData = await extractResumeFromText(extractionResult.text)
         processingMethod = 'text'
       }
-      // Use vision extraction if we have images but no text
-      else if (extractionResult.hasImages && extractionResult.images) {
-        console.log('Using vision-based extraction with GPT-4o')
-        // Convert base64 images to data URLs
-        const imageUrls = extractionResult.images.map(
-          base64 => `data:image/jpeg;base64,${base64}`
-        )
-        resumeData = await extractResumeFromImages(imageUrls)
-        processingMethod = 'vision'
-      }
       else {
-        throw new Error('No extractable content found in PDF')
+        throw new Error('No text content found in PDF. Please ensure your PDF is text-searchable.')
       }
     } catch (error) {
       console.error('Resume parsing error:', error)
