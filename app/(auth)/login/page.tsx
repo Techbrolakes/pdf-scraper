@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowRight } from "lucide-react";
+import { signIn } from "next-auth/react";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { EmailInput, PasswordInput } from "@/components/forms";
-import { FeatureHighlights } from "@/components/auth/feature-highlights";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function LoginPage() {
       router.refresh();
     } catch (error) {
       toast.error("Something went wrong", {
-        description: error as string,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setIsLoading(false);
@@ -61,21 +61,31 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-[#1447E6] to-[#0A2E8C] mb-6 shadow-lg shadow-[#1447E6]/30 relative overflow-hidden">
             {/* Animated gradient overlay */}
             <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent animate-pulse" />
-            <svg className="w-8 h-8 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            <svg
+              className="w-8 h-8 text-white relative z-10"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
             </svg>
           </div>
-          
+
           {/* Title with gradient */}
           <h1 className="text-4xl font-bold mb-3 bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent animate-gradient">
             Sign in to ResuméAI
           </h1>
-          
+
           {/* Subtitle */}
           <p className="text-gray-400 text-base mb-2">
             Extract resume data with AI-powered precision
           </p>
-          
+
           {/* Stats badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400 mt-4">
             <div className="flex items-center gap-1">
@@ -122,6 +132,16 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 border-t border-white/10" />
+            <span className="text-sm text-gray-400">Or continue with</span>
+            <div className="flex-1 border-t border-white/10" />
+          </div>
+
+          {/* OAuth Buttons */}
+          <OAuthButtons />
+
+          {/* Sign Up Link */}
+          <div className="flex items-center gap-4 mt-8">
+            <div className="flex-1 border-t border-white/10" />
             <span className="text-sm text-gray-400">New to ResuméAI?</span>
             <div className="flex-1 border-t border-white/10" />
           </div>
@@ -130,15 +150,13 @@ export default function LoginPage() {
           <div className="text-center">
             <Link
               href="/register"
-              className="text-blue-400 hover:text-blue-300 font-medium transition-colors inline-flex items-center gap-1 group"
+              className="text-blue-400 pt-4 hover:text-blue-300 font-medium transition-colors inline-flex items-center gap-1 group"
             >
               Create a new account
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
-
-        <FeatureHighlights />
       </div>
     </div>
   );

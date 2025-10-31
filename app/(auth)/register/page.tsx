@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowRight } from "lucide-react";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { EmailInput, PasswordInput, NameInput } from "@/components/forms";
-import { FeatureHighlights } from "@/components/auth/feature-highlights";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -31,38 +30,31 @@ export default function RegisterPage() {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+        }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || "Something went wrong");
+        toast.error(result.error || "Registration failed");
         return;
       }
 
-      toast.success("Account created successfully");
-
-      // Sign in the user
-      const signInResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
+      toast.success("Account created successfully!", {
+        description: "You can now sign in with your credentials",
+        duration: 4000,
       });
-
-      if (signInResult?.error) {
-        toast.error("Failed to sign in");
-        router.push("/login");
-        return;
-      }
-
-      router.push("/dashboard");
-      router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+      
+      router.push("/login");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -154,6 +146,16 @@ export default function RegisterPage() {
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 border-t border-white/10" />
+            <span className="text-sm text-gray-400">Or continue with</span>
+            <div className="flex-1 border-t border-white/10" />
+          </div>
+
+          {/* OAuth Buttons */}
+          <OAuthButtons />
+
+          {/* Sign In Link */}
+          <div className="flex items-center gap-4 mt-6">
+            <div className="flex-1 border-t border-white/10" />
             <span className="text-sm text-gray-400">Already have an account?</span>
             <div className="flex-1 border-t border-white/10" />
           </div>
@@ -169,8 +171,6 @@ export default function RegisterPage() {
             </Link>
           </div>
         </div>
-
-        <FeatureHighlights />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +30,6 @@ function ResetPasswordForm() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
-  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
 
   const {
     register,
@@ -41,40 +40,21 @@ function ResetPasswordForm() {
   });
 
   useEffect(() => {
-    // Validate token on mount
     if (!token) {
-      setTokenValid(false);
-      return;
+      toast.error("Invalid or missing reset token");
+      router.push("/forgot-password");
     }
-
-    const validateToken = async () => {
-      try {
-        const response = await fetch(
-          `/api/auth/validate-reset-token?token=${token}`
-        );
-        setTokenValid(response.ok);
-      } catch {
-        setTokenValid(false);
-      }
-    };
-
-    validateToken();
-  }, [token]);
+  }, [token, router]);
 
   const onSubmit = async (data: ResetPasswordInput) => {
-    if (!token) {
-      toast.error("Invalid reset token");
-      return;
-    }
+    if (!token) return;
 
     setIsLoading(true);
 
     try {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token,
           password: data.password,
@@ -84,77 +64,25 @@ function ResetPasswordForm() {
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || "Something went wrong");
+        toast.error(result.error || "Failed to reset password");
         return;
       }
 
       setResetSuccess(true);
       toast.success("Password reset successfully!");
 
-      // Redirect to login after 3 seconds
+      // Redirect to login after 2 seconds
       setTimeout(() => {
         router.push("/login");
-      }, 3000);
-    } catch {
-      toast.error("Something went wrong");
+      }, 2000);
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Loading state while validating token
-  if (tokenValid === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <div className="h-8 w-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
-          <p className="text-gray-400 mt-4">Validating reset link...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Invalid token state
-  if (!tokenValid) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-6">
-            <svg
-              className="w-8 h-8 text-red-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </div>
-
-          <h1 className="text-3xl font-bold text-white mb-3">
-            Invalid or expired link
-          </h1>
-
-          <p className="text-gray-400 mb-8">
-            This password reset link is invalid or has expired. Please request a
-            new one.
-          </p>
-
-          <Link
-            href="/forgot-password"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
-            Request new link
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   // Success state
   if (resetSuccess) {

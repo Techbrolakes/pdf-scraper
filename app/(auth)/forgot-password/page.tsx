@@ -35,23 +35,31 @@ export default function ForgotPasswordPage() {
     try {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || "Something went wrong");
+        toast.error(result.error || "Failed to send reset email");
         return;
+      }
+
+      // Show reset URL in development
+      if (process.env.NODE_ENV === "development" && result.resetUrl) {
+        toast.success("Reset link generated (dev mode)", {
+          description: result.resetUrl,
+          duration: 10000,
+        });
       }
 
       setEmailSent(true);
       toast.success("Password reset email sent!");
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error("Something went wrong", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     } finally {
       setIsLoading(false);
     }
