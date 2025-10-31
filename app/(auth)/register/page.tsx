@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowRight } from "lucide-react";
+import { triggerConfetti } from "@/components/ui/confetti";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { EmailInput, PasswordInput, NameInput } from "@/components/forms";
@@ -35,6 +36,7 @@ export default function RegisterPage() {
           name: data.name,
           email: data.email,
           password: data.password,
+          confirmPassword: data.confirmPassword,
         }),
       });
 
@@ -45,12 +47,18 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success("Account created successfully!", {
-        description: "You can now sign in with your credentials",
+      // Trigger confetti celebration
+      triggerConfetti(3000);
+
+      toast.success("🎉 Welcome to ResuméAI!", {
+        description: "Your account has been created successfully",
         duration: 4000,
       });
       
-      router.push("/login");
+      // Redirect after confetti animation
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     } catch (error) {
       toast.error("Something went wrong", {
         description: error instanceof Error ? error.message : "Unknown error",

@@ -10,17 +10,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
-    // Find user with valid reset token
-    const user = await prisma.user.findFirst({
-      where: {
-        resetToken: token,
-        resetTokenExpiry: {
-          gt: new Date(), // Token must not be expired
-        },
-      },
+    // Find valid reset token
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
     });
 
-    if (!user) {
+    if (!resetToken) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 400 }
+      );
+    }
+
+    // Check if token is expired
+    if (resetToken.expires < new Date()) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
         { status: 400 }
