@@ -125,10 +125,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract text from PDF using serverless-compatible processor
-    console.log("Extracting PDF content with serverless processor...");
+    console.log(`[Upload] Starting PDF extraction for file: ${file.name} (${file.size} bytes)`);
+    const extractionStartTime = Date.now();
     const extractionResult = await extractTextFromPDF(buffer);
+    const extractionDuration = Date.now() - extractionStartTime;
+    console.log(`[Upload] PDF extraction completed in ${extractionDuration}ms`);
 
     if (!extractionResult.success) {
+      console.error(`[Upload] PDF extraction failed: ${extractionResult.error}`);
       return NextResponse.json(
         {
           success: false,
@@ -139,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse resume with OpenAI
-    console.log("Parsing resume with OpenAI...");
+    console.log(`[Upload] Starting OpenAI parsing (text length: ${extractionResult.text?.length || 0} chars)`);
     let resumeData: ResumeData;
     const processingMethod = "text"; // Always text-based for serverless
 
@@ -150,8 +154,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log("Using text-based extraction with GPT-4o");
+      const openaiStartTime = Date.now();
       resumeData = await extractResumeFromText(extractionResult.text);
+      const openaiDuration = Date.now() - openaiStartTime;
+      console.log(`[Upload] OpenAI parsing completed in ${openaiDuration}ms`);
     } catch (error) {
       console.error("Resume parsing error:", error);
       return NextResponse.json(
@@ -189,6 +195,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Store metadata in database
+    console.log(`[Upload] Saving to database for user: ${session.user.id}`);
+    const dbStartTime = Date.now();
     const resumeHistory = await prisma.resumeHistory.create({
       data: {
         userId: session.user.id,
@@ -196,16 +204,20 @@ export async function POST(request: NextRequest) {
         resumeData: JSON.parse(JSON.stringify(processedData)),
       },
     });
+    const dbDuration = Date.now() - dbStartTime;
+    console.log(`[Upload] Database save completed in ${dbDuration}ms`);
 
     // Deduct credits after successful processing
+    console.log(`[Upload] Deducting ${CREDIT_COST_PER_RESUME} credits`);
     const creditsDeducted = await deductCredits(
       session.user.id,
       CREDIT_COST_PER_RESUME
     );
     if (!creditsDeducted) {
-      console.warn(`Failed to deduct credits for user ${session.user.id}`);
+      console.warn(`[Upload] Failed to deduct credits for user ${session.user.id}`);
     }
 
+    console.log(`[Upload] Upload completed successfully for ${file.name}`);
     return NextResponse.json({
       success: true,
       data: {

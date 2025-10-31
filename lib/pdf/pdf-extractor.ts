@@ -1,8 +1,12 @@
 /**
- * Minimal PDF text extractor for serverless environments
- * Uses pdf.js directly without any canvas dependencies
+ * PDF text extractor for serverless environments
+ * Uses pdf2json - pure JavaScript PDF parser
  * 100% compatible with Vercel, Netlify, and other serverless platforms
  */
+
+import PDFParser from 'pdf2json';
+import { promises as fs } from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface PDFProcessingResult {
   success: boolean;
@@ -13,10 +17,12 @@ export interface PDFProcessingResult {
 }
 
 /**
- * Extract text from PDF using minimal dependencies
- * This approach avoids all canvas-related issues
+ * Extract text from PDF using pdf2json library
+ * Pure JavaScript implementation, serverless-compatible
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingResult> {
+  let tempFilePath: string | null = null;
+
   try {
     // Validate buffer
     if (!buffer || buffer.length === 0) {
@@ -35,19 +41,57 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingR
       };
     }
 
-    // Direct extraction without any external libraries
-    // This ensures 100% serverless compatibility
-    console.log('Using basic PDF text extraction (serverless-compatible)');
+    console.log('Using pdf2json for PDF text extraction (serverless-compatible)');
 
-    // Use our basic PDF text extraction
-    // This approach works without any dependencies
-    const text = extractBasicText(buffer);
+    // Create temporary file for pdf2json
+    const fileName = uuidv4();
+    tempFilePath = `/tmp/${fileName}.pdf`;
+    await fs.writeFile(tempFilePath, buffer);
+
+    // Initialize PDF parser
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParser = new (PDFParser as any)(null, 1);
     
-    if (text && text.length > 10) {
+    // Extract text using pdf2json with promise wrapper
+    const extractedText = await new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('PDF extraction timeout'));
+      }, 30000); // 30 second timeout
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pdfParser.on('pdfParser_dataError', (errData: any) => {
+        clearTimeout(timeout);
+        console.error('PDF parser error:', errData.parserError);
+        reject(new Error(errData.parserError || 'PDF parsing failed'));
+      });
+
+      pdfParser.on('pdfParser_dataReady', () => {
+        clearTimeout(timeout);
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const rawText = (pdfParser as any).getRawTextContent();
+          resolve(rawText);
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      pdfParser.loadPDF(tempFilePath);
+    });
+
+    console.log(`Extracted ${extractedText.length} characters from PDF`);
+    
+    if (extractedText && extractedText.length > 10) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pageCount = (pdfParser as any).data?.Pages?.length || 1;
+      
       return {
         success: true,
-        text: cleanTextContent(text),
-        pageCount: 1, // Can't determine page count with basic extraction
+        text: cleanTextContent(extractedText),
+        pageCount,
+        metadata: {
+          pages: pageCount,
+        },
       };
     }
 
@@ -57,64 +101,39 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingR
     };
   } catch (error) {
     console.error('PDF extraction error:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        return {
+          success: false,
+          error: 'PDF processing timed out. The file may be too complex or corrupted.',
+        };
+      }
+      
+      if (error.message.includes('password') || error.message.includes('encrypted')) {
+        return {
+          success: false,
+          error: 'PDF is password-protected or encrypted. Please provide an unencrypted version.',
+        };
+      }
+    }
+    
     return {
       success: false,
       error: 'Failed to process PDF. Please ensure the file is a valid, text-based PDF.',
     };
+  } finally {
+    // Clean up temporary file
+    if (tempFilePath) {
+      try {
+        await fs.unlink(tempFilePath);
+      } catch (error) {
+        console.error('Failed to delete temporary file:', error);
+      }
+    }
   }
 }
 
-/**
- * Basic text extraction using regex
- * This is a fallback for when pdf-parse fails
- */
-function extractBasicText(buffer: Buffer): string {
-  try {
-    // Convert buffer to string
-    const content = buffer.toString('binary');
-    
-    // Look for text between BT (Begin Text) and ET (End Text) operators
-    const textMatches = content.match(/BT[\s\S]*?ET/g) || [];
-    
-    let extractedText = '';
-    
-    for (const match of textMatches) {
-      // Extract text within parentheses (PDF text strings)
-      const stringMatches = match.match(/\(([^)]+)\)/g) || [];
-      
-      for (const str of stringMatches) {
-        // Remove parentheses and clean up
-        const cleanStr = str.slice(1, -1)
-          .replace(/\\(\d{3})/g, (_, oct) => String.fromCharCode(parseInt(oct, 8)))
-          .replace(/\\\(/g, '(')
-          .replace(/\\\)/g, ')')
-          .replace(/\\\\/g, '\\');
-        
-        extractedText += cleanStr + ' ';
-      }
-    }
-    
-    // Also try to find text in streams
-    const streamMatches = content.match(/stream[\s\S]*?endstream/g) || [];
-    
-    for (const stream of streamMatches) {
-      // Look for Tj or TJ operators (show text)
-      const tjMatches = stream.match(/\(([^)]+)\)\s*Tj/g) || [];
-      
-      for (const tj of tjMatches) {
-        const text = tj.match(/\(([^)]+)\)/)?.[1];
-        if (text) {
-          extractedText += text + ' ';
-        }
-      }
-    }
-    
-    return extractedText;
-  } catch (error) {
-    console.error('Basic text extraction error:', error);
-    return '';
-  }
-}
 
 /**
  * Clean and normalize extracted text
