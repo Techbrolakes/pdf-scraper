@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_STRIPE_PRICE_BASIC: process.env.STRIPE_PRICE_BASIC,
     NEXT_PUBLIC_STRIPE_PRICE_PRO: process.env.STRIPE_PRICE_PRO,
   },
-  serverExternalPackages: ['canvas', 'sharp'],
+  // Removed canvas and sharp - not needed for text-only PDF extraction
   turbopack: {},
 };
 
