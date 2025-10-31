@@ -1,20 +1,20 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { signIn } from 'next-auth/react'
-import Link from 'next/link'
-import { toast } from 'sonner'
-import { loginSchema, type LoginInput } from '@/lib/validations/auth'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { loginSchema, type LoginInput } from "@/lib/validations/auth";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -22,32 +22,34 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-  })
+  });
 
   const onSubmit = async (data: LoginInput) => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        toast.error('Invalid email or password')
-        return
+        toast.error("Invalid email or password");
+        return;
       }
 
-      toast.success('Logged in successfully')
-      router.push('/dashboard')
-      router.refresh()
+      toast.success("Logged in successfully");
+      router.push("/dashboard");
+      router.refresh();
     } catch (error) {
-      toast.error('Something went wrong')
+      toast.error("Something went wrong", {
+        description: error as string,
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -57,7 +59,7 @@ export default function LoginPage() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            Or{" "}
             <Link
               href="/register"
               className="font-medium text-blue-600 hover:text-blue-500"
@@ -74,11 +76,13 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 autoComplete="email"
-                {...register('email')}
+                {...register("email")}
                 className="mt-1"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.email.message}
+                </p>
               )}
             </div>
             <div>
@@ -87,26 +91,24 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
-                {...register('password')}
+                {...register("password")}
                 className="mt-1"
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.password.message}
+                </p>
               )}
             </div>
           </div>
 
           <div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }
