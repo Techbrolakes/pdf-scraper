@@ -1,35 +1,36 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ResumeDetailModal } from './resume-detail-modal'
-import type { ResumeData } from '@/types/resume'
-import { toast } from '@/lib/toast'
+import { useState } from "react";
+import { ResumeDetailModal } from "./resume-detail-modal";
+import type { ResumeData } from "@/types/resume";
+import { toast } from "@/lib/toast";
 
 interface ResumeHistoryItem {
-  id: string
-  fileName: string
-  uploadedAt: Date
+  id: string;
+  fileName: string;
+  uploadedAt: Date;
   resumeData: {
-    pdfType: string
-    pages: number
-    processingMethod: string
-    status: string
-    resumeData: ResumeData
-  }
+    pdfType: string;
+    pages: number;
+    processingMethod: string;
+    status: string;
+    resumeData: ResumeData;
+  };
 }
 
 interface ResumeHistoryProps {
-  resumes: ResumeHistoryItem[]
-  onDelete: (id: string) => Promise<void>
+  resumes: ResumeHistoryItem[];
+  onDelete: (id: string) => Promise<void>;
 }
 
 export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
-  const [selectedResume, setSelectedResume] = useState<ResumeHistoryItem | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [selectedResume, setSelectedResume] =
+    useState<ResumeHistoryItem | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Filter and sort resumes
   const filteredResumes = resumes
@@ -37,29 +38,32 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
       resume.fileName.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
-      const dateA = new Date(a.uploadedAt).getTime()
-      const dateB = new Date(b.uploadedAt).getTime()
-      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB
-    })
+      const dateA = new Date(a.uploadedAt).getTime();
+      const dateB = new Date(b.uploadedAt).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
 
   // Pagination
-  const totalPages = Math.ceil(filteredResumes.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedResumes = filteredResumes.slice(startIndex, startIndex + itemsPerPage)
+  const totalPages = Math.ceil(filteredResumes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedResumes = filteredResumes.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const handleDelete = async (id: string) => {
     try {
-      await onDelete(id)
-      toast.success('Resume deleted successfully')
-      setDeleteConfirm(null)
+      await onDelete(id);
+      toast.success("Resume deleted successfully");
+      setDeleteConfirm(null);
     } catch {
-      toast.error('Failed to delete resume')
+      toast.error("Failed to delete resume");
     }
-  }
+  };
 
   if (resumes.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-12 text-center">
+      <div className="bg-main-background rounded-lg shadow p-12 text-center">
         <svg
           className="mx-auto h-12 w-12 text-gray-400"
           fill="none"
@@ -73,21 +77,26 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 className="mt-4 text-lg font-medium text-gray-900">No resumes yet</h3>
+        <h3 className="mt-4 text-lg font-medium text-gray-900">
+          No resumes yet
+        </h3>
         <p className="mt-2 text-gray-500">
-          Upload your first PDF resume to get started with AI-powered data extraction.
+          Upload your first PDF resume to get started with AI-powered data
+          extraction.
         </p>
       </div>
-    )
+    );
   }
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-main-background rounded-lg shadow">
         {/* Header with search and sort */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            <h2 className="text-xl font-semibold text-gray-900">Resume History</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Resume History
+            </h2>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {/* Search */}
               <div className="relative">
@@ -96,8 +105,8 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   placeholder="Search by filename..."
                   value={searchQuery}
                   onChange={(e) => {
-                    setSearchQuery(e.target.value)
-                    setCurrentPage(1)
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
                   }}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
                   aria-label="Search resumes by filename"
@@ -120,7 +129,9 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
               {/* Sort */}
               <select
                 value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
+                onChange={(e) =>
+                  setSortOrder(e.target.value as "newest" | "oldest")
+                }
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 aria-label="Sort resumes"
               >
@@ -166,11 +177,14 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                           </p>
                           <div className="flex items-center gap-3 mt-1">
                             <p className="text-sm text-gray-500">
-                              {new Date(resume.uploadedAt).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
+                              {new Date(resume.uploadedAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
                             </p>
                             <span className="text-gray-300">•</span>
                             <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
@@ -178,7 +192,8 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                             </span>
                             <span className="text-gray-300">•</span>
                             <span className="text-xs text-gray-500">
-                              {resume.resumeData.pages} {resume.resumeData.pages === 1 ? 'page' : 'pages'}
+                              {resume.resumeData.pages}{" "}
+                              {resume.resumeData.pages === 1 ? "page" : "pages"}
                             </span>
                           </div>
                         </div>
@@ -197,7 +212,12 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete resume"
                       >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -216,34 +236,39 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
             {totalPages > 1 && (
               <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
                 <p className="text-sm text-gray-700">
-                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredResumes.length)} of{' '}
-                  {filteredResumes.length} results
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(startIndex + itemsPerPage, filteredResumes.length)}{" "}
+                  of {filteredResumes.length} results
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-main-background border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 text-sm font-medium rounded-md ${
-                        currentPage === page
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 text-sm font-medium rounded-md ${
+                          currentPage === page
+                            ? "bg-blue-600 text-white"
+                            : "text-gray-700 bg-main-background border border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
                   <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-main-background border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -267,21 +292,27 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" onClick={() => setDeleteConfirm(null)}>
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto"
+          onClick={() => setDeleteConfirm(null)}
+        >
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
             <div
-              className="relative bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
+              className="relative bg-main-background rounded-lg shadow-xl p-6 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Resume</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Delete Resume
+              </h3>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this resume? This action cannot be undone.
+                Are you sure you want to delete this resume? This action cannot
+                be undone.
               </p>
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-main-background border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -297,5 +328,5 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
         </div>
       )}
     </>
-  )
+  );
 }
