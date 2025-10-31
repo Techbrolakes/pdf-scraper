@@ -1,9 +1,3 @@
-// Polyfill for DOMMatrix to fix Vercel deployment error
-if (typeof window === 'undefined') {
-  // @ts-expect-error - DOMMatrix is not defined in Node.js
-  global.DOMMatrix = class DOMMatrix {};
-}
-
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
