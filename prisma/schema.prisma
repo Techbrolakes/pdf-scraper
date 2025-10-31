@@ -29,6 +29,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
+  // Password reset fields
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  
   // Subscription fields
   credits               Int       @default(0)
   planType              PlanType  @default(FREE)
