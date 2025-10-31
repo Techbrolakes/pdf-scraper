@@ -5,7 +5,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 ## Features
 
 ### Core Features
-- 🔐 **Authentication**: Secure email/password authentication with NextAuth.js
+- 🔐 **Authentication**: Email/password + GitHub/Google OAuth with NextAuth.js
 - 📤 **PDF Upload**: Drag-and-drop PDF upload with file validation
 - 🤖 **AI-Powered Extraction**: OpenAI GPT-4 and Vision for intelligent data extraction
 - 📄 **Text & Image PDFs**: Support for both text-based and image-based resumes
@@ -71,28 +71,37 @@ npm install
 
 3. Set up environment variables:
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-Edit `.env` and add your configuration:
+Edit `.env.local` and add your configuration:
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/pdf_scraper?schema=public"
 
 # NextAuth
-NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_SECRET="your-secret-key-here" # Generate with: openssl rand -base64 32
 NEXTAUTH_URL="http://localhost:3000"
 
+# GitHub OAuth (see NEXTAUTH_SETUP.md for instructions)
+GITHUB_ID="your-github-oauth-client-id"
+GITHUB_SECRET="your-github-oauth-client-secret"
+
+# Google OAuth (see NEXTAUTH_SETUP.md for instructions)
+GOOGLE_ID="your-google-oauth-client-id"
+GOOGLE_SECRET="your-google-oauth-client-secret"
+
 # OpenAI
-OPENAI_API_KEY="your-openai-api-key-here"
+OPENAI_KEY="your-openai-api-key-here"
 
 # Stripe (Optional - for subscription features)
 STRIPE_SECRET_KEY="sk_test_your-stripe-secret-key-here"
-STRIPE_PUBLIC_KEY="pk_test_your-stripe-public-key-here"
 STRIPE_WEBHOOK_SECRET="whsec_your-webhook-secret-here"
 STRIPE_PRICE_BASIC="price_basic_plan_id"
 STRIPE_PRICE_PRO="price_pro_plan_id"
 ```
+
+For detailed OAuth setup instructions, see [NEXTAUTH_SETUP.md](./NEXTAUTH_SETUP.md)
 
 4. Generate Prisma client and run migrations:
 ```bash
@@ -156,9 +165,14 @@ pdf-scraper/
 
 The application uses NextAuth.js v5 with:
 - Credentials provider (email/password)
+- GitHub OAuth provider
+- Google OAuth provider
 - JWT session strategy
 - Prisma adapter for database sessions
 - Protected routes via middleware
+- Password reset flow
+
+For detailed setup instructions, see [NEXTAUTH_SETUP.md](./NEXTAUTH_SETUP.md)
 
 ## Development
 

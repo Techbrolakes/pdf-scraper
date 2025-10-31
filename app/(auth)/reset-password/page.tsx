@@ -1,61 +1,77 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowRight } from "lucide-react";
-import { triggerConfetti } from "@/components/ui/confetti";
-import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
+import { ArrowRight, CheckCircle } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { EmailInput, PasswordInput, NameInput } from "@/components/forms";
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { PasswordInput } from "@/components/forms";
 
-export default function RegisterPage() {
+const resetPasswordSchema = z
+  .object({
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+function ResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+
   const [isLoading, setIsLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
   });
 
-  const onSubmit = async (data: RegisterInput) => {
+  useEffect(() => {
+    if (!token) {
+      toast.error("Invalid or missing reset token");
+      router.push("/forgot-password");
+    }
+  }, [token, router]);
+
+  const onSubmit = async (data: ResetPasswordInput) => {
+    if (!token) return;
+
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: data.name,
-          email: data.email,
+          token,
           password: data.password,
-          confirmPassword: data.confirmPassword,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || "Registration failed");
+        toast.error(result.error || "Failed to reset password");
         return;
       }
 
-      // Trigger confetti celebration
-      triggerConfetti(3000);
+      setResetSuccess(true);
+      toast.success("Password reset successfully!");
 
-      toast.success("🎉 Welcome to ResuméAI!", {
-        description: "Your account has been created successfully",
-        duration: 4000,
-      });
-
-      // Redirect after confetti animation
+      // Redirect to login after 2 seconds
       setTimeout(() => {
         router.push("/login");
       }, 2000);
@@ -68,14 +84,42 @@ export default function RegisterPage() {
     }
   };
 
+  // Success state
+  if (resetSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-6">
+            <CheckCircle className="w-8 h-8 text-green-400" />
+          </div>
+
+          <h1 className="text-3xl font-bold text-white mb-3">
+            Password reset successful!
+          </h1>
+
+          <p className="text-gray-400 mb-8">
+            Your password has been reset. Redirecting you to sign in...
+          </p>
+
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Go to sign in
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-10">
-          {/* Logo - AI Brain with Document */}
+          {/* Logo */}
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-[#1447E6] to-[#0A2E8C] mb-6 shadow-lg shadow-[#1447E6]/30 relative overflow-hidden">
-            {/* Animated gradient overlay */}
             <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent animate-pulse" />
             <svg
               className="w-8 h-8 text-white relative z-10"
@@ -92,52 +136,22 @@ export default function RegisterPage() {
             </svg>
           </div>
 
-          {/* Title with gradient */}
           <h1 className="text-4xl font-bold mb-3 bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent animate-gradient">
-            Join ResuméAI
+            Set new password
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-gray-400 text-base mb-2">
-            Start extracting resume data in seconds
+          <p className="text-gray-400 text-base">
+            Choose a strong password for your account
           </p>
-
-          {/* Trust badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400 mt-4">
-            <div className="flex items-center gap-1">
-              <svg
-                className="w-3 h-3 text-green-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Trusted by recruiters • Start in 30 seconds</span>
-            </div>
-          </div>
         </div>
 
         {/* Form Card */}
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-2xl">
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-            <NameInput
-              register={register("name")}
-              error={errors.name?.message}
-            />
-
-            <EmailInput
-              register={register("email")}
-              error={errors.email?.message}
-            />
-
             <PasswordInput
               register={register("password")}
               error={errors.password?.message}
-              label="Password"
+              label="New Password"
               autoComplete="new-password"
             />
 
@@ -158,48 +172,32 @@ export default function RegisterPage() {
               {isLoading ? (
                 <>
                   <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creating account...
+                  Resetting password...
                 </>
               ) : (
                 <>
-                  Create account
+                  Reset password
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
           </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 border-t border-white/10" />
-            <span className="text-sm text-gray-400">Or continue with</span>
-            <div className="flex-1 border-t border-white/10" />
-          </div>
-
-          {/* OAuth Buttons */}
-          <OAuthButtons />
-
-          {/* Sign In Link */}
-          <div className="flex items-center gap-4 mt-8">
-            <div className="flex-1 border-t border-white/10" />
-            <span className="text-sm text-gray-400">
-              Already have an account?
-            </span>
-            <div className="flex-1 border-t border-white/10" />
-          </div>
-
-          {/* Sign In Link */}
-          <div className="text-center">
-            <Link
-              href="/login"
-              className="text-blue-400 pt-4 hover:text-blue-300 font-medium transition-colors inline-flex items-center gap-1 group"
-            >
-              Sign in to existing account
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="h-8 w-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
