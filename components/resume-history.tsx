@@ -40,10 +40,17 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
-  const [dateRange, setDateRange] = useState<"all" | "7days" | "30days" | "90days">("all");
-  const [pageCount, setPageCount] = useState<"all" | "1" | "2-3" | "4-5" | "6+">("all");
-  const [fileSize, setFileSize] = useState<"all" | "small" | "medium" | "large">("all");
+  const [dateRange, setDateRange] = useState<
+    "all" | "7days" | "30days" | "90days"
+  >("all");
+  const [pageCount, setPageCount] = useState<
+    "all" | "1" | "2-3" | "4-5" | "6+"
+  >("all");
+  const [fileSize, setFileSize] = useState<
+    "all" | "small" | "medium" | "large"
+  >("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 10;
 
   // Filter and sort resumes
@@ -58,8 +65,10 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
       if (dateRange !== "all") {
         const now = new Date();
         const uploadDate = new Date(resume.uploadedAt);
-        const daysDiff = Math.floor((now.getTime() - uploadDate.getTime()) / (1000 * 60 * 60 * 24));
-        
+        const daysDiff = Math.floor(
+          (now.getTime() - uploadDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
         if (dateRange === "7days" && daysDiff > 7) return false;
         if (dateRange === "30days" && daysDiff > 30) return false;
         if (dateRange === "90days" && daysDiff > 90) return false;
@@ -118,14 +127,15 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
         {/* Decorative background */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/10">
             <DocumentIcon className="h-10 w-10 text-blue-400" />
           </div>
           <h3 className="text-xl font-bold text-white mb-2">No resumes yet</h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
-            Upload your first PDF resume to get started with AI-powered data extraction and analysis.
+            Upload your first PDF resume to get started with AI-powered data
+            extraction and analysis.
           </p>
         </div>
       </div>
@@ -138,37 +148,41 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
         {/* Header with search and sort */}
         <div className="p-4 sm:p-6 border-b border-white/10">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
+            <div className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center shrink-0">
                   <DocumentIcon className="w-5 h-5 text-blue-400" />
                 </div>
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white">
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold text-white">
                     Resume History
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
-                    {resumes.length} {resumes.length === 1 ? 'resume' : 'resumes'} uploaded
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {resumes.length}{" "}
+                    {resumes.length === 1 ? "resume" : "resumes"}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {(dateRange !== "all" || pageCount !== "all" || fileSize !== "all") && (
-                  <div className="px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                {(dateRange !== "all" ||
+                  pageCount !== "all" ||
+                  fileSize !== "all") && (
+                  <div className="px-2 sm:px-3 py-1 sm:py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                     <span className="text-xs font-semibold text-purple-300">
-                      🔍 Filtered
+                      🔍
                     </span>
                   </div>
                 )}
-                <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <div className="px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                   <span className="text-xs font-semibold text-blue-300">
-                    {filteredResumes.length} shown
+                    {filteredResumes.length}
                   </span>
                 </div>
               </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+
+            {/* Search and Sort Row */}
+            <div className="flex flex-col sm:flex-row gap-2">
               {/* Search */}
               <div className="relative flex-1 group">
                 <input
@@ -179,25 +193,26 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-10 pr-4 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white/10 hover:bg-white/10 w-full transition-all"
+                  className="pl-10 pr-10 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white/10 hover:bg-white/10 w-full transition-all"
                   aria-label="Search resumes by filename"
                 />
                 <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
                 {searchQuery && (
                   <button
                     onClick={() => {
-                      setSearchQuery('');
+                      setSearchQuery("");
                       setCurrentPage(1);
                     }}
                     className="absolute right-3 top-2.5 p-0.5 hover:bg-white/10 rounded-md transition-colors"
+                    aria-label="Clear search"
                   >
                     <CloseIcon className="h-4 w-4 text-gray-400 hover:text-white" />
                   </button>
                 )}
               </div>
 
-              {/* Sort */}
-              <div className="relative group">
+              {/* Sort - Desktop */}
+              <div className="hidden sm:block relative group">
                 <select
                   value={sortOrder}
                   onChange={(e) =>
@@ -216,10 +231,161 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                 <SortIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-blue-400 transition-colors pointer-events-none" />
                 <ChevronDownIcon className="absolute right-3 top-3.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
               </div>
+
+              {/* Mobile Filter Toggle Button */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="sm:hidden flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all"
+                aria-label="Toggle filters"
+                aria-expanded={showFilters}
+              >
+                <SortIcon className="h-4 w-4" />
+                <span>Filters</span>
+                {(dateRange !== "all" ||
+                  pageCount !== "all" ||
+                  fileSize !== "all") && (
+                  <span className="w-2 h-2 bg-purple-500 rounded-full" />
+                )}
+                <ChevronDownIcon
+                  className={`h-3.5 w-3.5 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                />
+              </button>
             </div>
 
-            {/* Additional Filters */}
-            <div className="flex flex-wrap gap-2">
+            {/* Mobile Filters - Collapsible */}
+            <div
+              className={`sm:hidden space-y-2 overflow-hidden transition-all ${showFilters ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
+            >
+              {/* Sort - Mobile */}
+              <div className="relative group">
+                <select
+                  value={sortOrder}
+                  onChange={(e) =>
+                    setSortOrder(e.target.value as "newest" | "oldest")
+                  }
+                  className="pl-10 pr-8 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white/10 hover:bg-white/10 cursor-pointer transition-all appearance-none w-full"
+                  aria-label="Sort resumes"
+                >
+                  <option value="newest" className="bg-[#0a0a0a]">
+                    Newest First
+                  </option>
+                  <option value="oldest" className="bg-[#0a0a0a]">
+                    Oldest First
+                  </option>
+                </select>
+                <SortIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-blue-400 transition-colors pointer-events-none" />
+                <ChevronDownIcon className="absolute right-3 top-3.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Date Range Filter */}
+              <div className="relative group">
+                <select
+                  value={dateRange}
+                  onChange={(e) => {
+                    setDateRange(e.target.value as typeof dateRange);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-10 pr-8 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 hover:bg-white/10 cursor-pointer transition-all appearance-none w-full"
+                  aria-label="Filter by date range"
+                >
+                  <option value="all" className="bg-[#0a0a0a]">
+                    All Time
+                  </option>
+                  <option value="7days" className="bg-[#0a0a0a]">
+                    Last 7 Days
+                  </option>
+                  <option value="30days" className="bg-[#0a0a0a]">
+                    Last 30 Days
+                  </option>
+                  <option value="90days" className="bg-[#0a0a0a]">
+                    Last 90 Days
+                  </option>
+                </select>
+                <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
+                <ChevronDownIcon className="absolute right-3 top-3.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Page Count Filter */}
+              <div className="relative group">
+                <select
+                  value={pageCount}
+                  onChange={(e) => {
+                    setPageCount(e.target.value as typeof pageCount);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-10 pr-8 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 hover:bg-white/10 cursor-pointer transition-all appearance-none w-full"
+                  aria-label="Filter by page count"
+                >
+                  <option value="all" className="bg-[#0a0a0a]">
+                    All Pages
+                  </option>
+                  <option value="1" className="bg-[#0a0a0a]">
+                    1 Page
+                  </option>
+                  <option value="2-3" className="bg-[#0a0a0a]">
+                    2-3 Pages
+                  </option>
+                  <option value="4-5" className="bg-[#0a0a0a]">
+                    4-5 Pages
+                  </option>
+                  <option value="6+" className="bg-[#0a0a0a]">
+                    6+ Pages
+                  </option>
+                </select>
+                <FileIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
+                <ChevronDownIcon className="absolute right-3 top-3.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* File Size Filter */}
+              <div className="relative group">
+                <select
+                  value={fileSize}
+                  onChange={(e) => {
+                    setFileSize(e.target.value as typeof fileSize);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-10 pr-8 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 hover:bg-white/10 cursor-pointer transition-all appearance-none w-full"
+                  aria-label="Filter by file size"
+                >
+                  <option value="all" className="bg-[#0a0a0a]">
+                    All Sizes
+                  </option>
+                  <option value="small" className="bg-[#0a0a0a]">
+                    Small (&lt;1MB)
+                  </option>
+                  <option value="medium" className="bg-[#0a0a0a]">
+                    Medium (1-5MB)
+                  </option>
+                  <option value="large" className="bg-[#0a0a0a]">
+                    Large (5-10MB)
+                  </option>
+                </select>
+                <DocumentIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
+                <ChevronDownIcon className="absolute right-3 top-3.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Clear Filters Button - Mobile */}
+              {(dateRange !== "all" ||
+                pageCount !== "all" ||
+                fileSize !== "all" ||
+                searchQuery) && (
+                <button
+                  onClick={() => {
+                    setDateRange("all");
+                    setPageCount("all");
+                    setFileSize("all");
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-2.5 text-sm font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/20 hover:border-red-500/40"
+                >
+                  Clear All Filters
+                </button>
+              )}
+            </div>
+
+            {/* Desktop Filters - Always Visible */}
+            <div className="hidden sm:flex flex-wrap gap-2">
               {/* Date Range Filter */}
               <div className="relative group">
                 <select
@@ -231,10 +397,18 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   className="pl-9 pr-8 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 hover:bg-white/10 cursor-pointer transition-all appearance-none"
                   aria-label="Filter by date range"
                 >
-                  <option value="all" className="bg-[#0a0a0a]">All Time</option>
-                  <option value="7days" className="bg-[#0a0a0a]">Last 7 Days</option>
-                  <option value="30days" className="bg-[#0a0a0a]">Last 30 Days</option>
-                  <option value="90days" className="bg-[#0a0a0a]">Last 90 Days</option>
+                  <option value="all" className="bg-[#0a0a0a]">
+                    All Time
+                  </option>
+                  <option value="7days" className="bg-[#0a0a0a]">
+                    Last 7 Days
+                  </option>
+                  <option value="30days" className="bg-[#0a0a0a]">
+                    Last 30 Days
+                  </option>
+                  <option value="90days" className="bg-[#0a0a0a]">
+                    Last 90 Days
+                  </option>
                 </select>
                 <CalendarIcon className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                 <ChevronDownIcon className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
@@ -251,11 +425,21 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   className="pl-9 pr-8 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 hover:bg-white/10 cursor-pointer transition-all appearance-none"
                   aria-label="Filter by page count"
                 >
-                  <option value="all" className="bg-[#0a0a0a]">All Pages</option>
-                  <option value="1" className="bg-[#0a0a0a]">1 Page</option>
-                  <option value="2-3" className="bg-[#0a0a0a]">2-3 Pages</option>
-                  <option value="4-5" className="bg-[#0a0a0a]">4-5 Pages</option>
-                  <option value="6+" className="bg-[#0a0a0a]">6+ Pages</option>
+                  <option value="all" className="bg-[#0a0a0a]">
+                    All Pages
+                  </option>
+                  <option value="1" className="bg-[#0a0a0a]">
+                    1 Page
+                  </option>
+                  <option value="2-3" className="bg-[#0a0a0a]">
+                    2-3 Pages
+                  </option>
+                  <option value="4-5" className="bg-[#0a0a0a]">
+                    4-5 Pages
+                  </option>
+                  <option value="6+" className="bg-[#0a0a0a]">
+                    6+ Pages
+                  </option>
                 </select>
                 <FileIcon className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                 <ChevronDownIcon className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
@@ -272,17 +456,28 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   className="pl-9 pr-8 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 hover:bg-white/10 cursor-pointer transition-all appearance-none"
                   aria-label="Filter by file size"
                 >
-                  <option value="all" className="bg-[#0a0a0a]">All Sizes</option>
-                  <option value="small" className="bg-[#0a0a0a]">Small (&lt;1MB)</option>
-                  <option value="medium" className="bg-[#0a0a0a]">Medium (1-5MB)</option>
-                  <option value="large" className="bg-[#0a0a0a]">Large (5-10MB)</option>
+                  <option value="all" className="bg-[#0a0a0a]">
+                    All Sizes
+                  </option>
+                  <option value="small" className="bg-[#0a0a0a]">
+                    Small (&lt;1MB)
+                  </option>
+                  <option value="medium" className="bg-[#0a0a0a]">
+                    Medium (1-5MB)
+                  </option>
+                  <option value="large" className="bg-[#0a0a0a]">
+                    Large (5-10MB)
+                  </option>
                 </select>
                 <DocumentIcon className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                 <ChevronDownIcon className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
               </div>
 
-              {/* Clear Filters Button */}
-              {(dateRange !== "all" || pageCount !== "all" || fileSize !== "all" || searchQuery) && (
+              {/* Clear Filters Button - Desktop */}
+              {(dateRange !== "all" ||
+                pageCount !== "all" ||
+                fileSize !== "all" ||
+                searchQuery) && (
                 <button
                   onClick={() => {
                     setDateRange("all");
@@ -315,7 +510,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                 >
                   {/* Hover gradient effect */}
                   <div className="absolute inset-0 bg-linear-to-r from-blue-500/0 via-blue-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                  
+
                   <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start sm:items-center gap-3 sm:gap-4">
@@ -334,7 +529,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                                 {
                                   month: "short",
                                   day: "numeric",
-                                  year: "numeric"
+                                  year: "numeric",
                                 }
                               )}
                             </span>
