@@ -1,10 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getUserStats } from '@/app/actions/settings-actions'
-import { ProfileSection } from '@/components/settings/profile-section'
-import { PasswordSection } from '@/components/settings/password-section'
-import { AccountSection } from '@/components/settings/account-section'
-import { StatsSection } from '@/components/settings/stats-section'
+import { SettingsTabs } from '@/components/settings/settings-tabs'
 
 export default async function SettingsPage() {
   const session = await auth()
@@ -37,20 +34,13 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {/* Content Grid */}
-      <div className="space-y-6">
-        {/* Usage Statistics */}
-        <StatsSection totalResumes={totalResumes} createdAt={createdAt} />
-
-        {/* Profile Information */}
-        <ProfileSection initialName={name} email={email} />
-
-        {/* Change Password */}
-        <PasswordSection />
-
-        {/* Account Management */}
-        <AccountSection />
-      </div>
+      {/* Tabs Content */}
+      <SettingsTabs
+        name={name || ''}
+        email={email}
+        totalResumes={totalResumes}
+        createdAt={createdAt}
+      />
     </div>
   )
 }

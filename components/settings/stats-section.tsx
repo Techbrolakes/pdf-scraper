@@ -7,7 +7,7 @@ export function StatsSection({ totalResumes, createdAt }: StatsSectionProps) {
   const daysSinceCreation = Math.floor((new Date().getTime() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24))
   
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+    <div className="p-6">
       <h2 className="text-lg font-semibold text-white mb-6">Usage Statistics</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

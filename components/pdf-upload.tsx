@@ -1,248 +1,366 @@
-'use client'
+"use client";
 
-import { useState, useRef, DragEvent, ChangeEvent } from 'react'
-import { toast } from '@/lib/toast'
+import { useState, useRef, DragEvent, ChangeEvent } from "react";
+import { toast } from "@/lib/toast";
+import confetti from "canvas-confetti";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-const LARGE_FILE_THRESHOLD = 4 * 1024 * 1024 // 4MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const LARGE_FILE_THRESHOLD = 4 * 1024 * 1024; // 4MB
 
 interface UploadState {
-  isUploading: boolean
-  isProcessing: boolean
-  progress: number
-  message: string
+  isUploading: boolean;
+  isProcessing: boolean;
+  progress: number;
+  message: string;
 }
 
-export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void }) {
+export function PDFUpload({
+  onUploadSuccess,
+}: {
+  onUploadSuccess?: () => void;
+}) {
   const [uploadState, setUploadState] = useState<UploadState>({
     isUploading: false,
     isProcessing: false,
     progress: 0,
-    message: '',
-  })
-  const [isDragging, setIsDragging] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+    message: "",
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
     // Check file type
-    if (file.type !== 'application/pdf') {
-      return 'Invalid file type. Please upload a PDF file.'
+    if (file.type !== "application/pdf") {
+      return "Invalid file type. Please upload a PDF file.";
     }
 
     // Check file size
     if (file.size > MAX_FILE_SIZE) {
-      return `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit.`
+      return `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit.`;
     }
 
     if (file.size === 0) {
-      return 'File is empty. Please upload a valid PDF.'
+      return "File is empty. Please upload a valid PDF.";
     }
 
-    return null
-  }
+    return null;
+  };
 
   const uploadFile = async (file: File) => {
-    const validationError = validateFile(file)
+    const validationError = validateFile(file);
     if (validationError) {
-      toast.error(validationError)
-      return
+      toast.error(validationError);
+      return;
     }
 
-    const isLargeFile = file.size > LARGE_FILE_THRESHOLD
+    const isLargeFile = file.size > LARGE_FILE_THRESHOLD;
 
     try {
       setUploadState({
         isUploading: true,
         isProcessing: false,
         progress: 0,
-        message: 'Uploading...',
-      })
+        message: "Uploading...",
+      });
 
       if (isLargeFile) {
         // Use API route for large files
-        await uploadLargeFile(file)
+        await uploadLargeFile(file);
       } else {
         // Use Server Action for small files
-        await uploadSmallFile(file)
+        await uploadSmallFile(file);
       }
 
       setUploadState({
         isUploading: false,
         isProcessing: false,
         progress: 100,
-        message: 'Upload complete!',
-      })
+        message: "Upload complete!",
+      });
 
-      toast.success('PDF uploaded and processed successfully!')
-      
+      // Trigger confetti animation
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'],
+      });
+
+      toast.success("🎉 PDF uploaded and processed successfully!");
+
       // Reset state after success
       setTimeout(() => {
         setUploadState({
           isUploading: false,
           isProcessing: false,
           progress: 0,
-          message: '',
-        })
+          message: "",
+        });
         if (onUploadSuccess) {
-          onUploadSuccess()
+          onUploadSuccess();
         }
-      }, 1500)
+      }, 1500);
     } catch (error) {
       setUploadState({
         isUploading: false,
         isProcessing: false,
         progress: 0,
-        message: '',
-      })
-      
-      const errorMessage = error instanceof Error ? error.message : 'Upload failed. Please try again.'
-      toast.error(errorMessage)
+        message: "",
+      });
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Upload failed. Please try again.";
+      toast.error(errorMessage);
     }
-  }
+  };
 
   const uploadSmallFile = async (file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
+    const formData = new FormData();
+    formData.append("file", file);
 
-    // Simulate smooth progress animation
-    const progressInterval = setInterval(() => {
-      setUploadState(prev => {
-        if (prev.progress < 90) {
-          return { ...prev, progress: prev.progress + 2 }
-        }
-        return prev
-      })
-    }, 100)
+    let progressInterval: NodeJS.Timeout | null = null;
+    let analyzeInterval: NodeJS.Timeout | null = null;
+    let extractInterval: NodeJS.Timeout | null = null;
 
     try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
+      // Phase 1: Uploading (0-30%)
+      setUploadState((prev) => ({
+        ...prev,
+        message: "Uploading PDF...",
+        progress: 0,
+      }));
 
-      setUploadState(prev => ({ ...prev, message: 'Extracting data...' }))
+      progressInterval = setInterval(() => {
+        setUploadState((prev) => {
+          if (prev.progress < 30) {
+            return { ...prev, progress: prev.progress + 2 };
+          }
+          return prev;
+        });
+      }, 100);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (progressInterval) clearInterval(progressInterval);
+
+      // Phase 2: Analyzing data (30-60%)
+      setUploadState((prev) => ({
+        ...prev,
+        message: "Analyzing data...",
+        progress: 30,
+      }));
+
+      analyzeInterval = setInterval(() => {
+        setUploadState((prev) => {
+          if (prev.progress < 60) {
+            return { ...prev, progress: prev.progress + 2 };
+          }
+          return prev;
+        });
+      }, 100);
+
+      // Wait a bit to show analyzing phase
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       if (!response.ok) {
-        clearInterval(progressInterval)
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
+        if (analyzeInterval) clearInterval(analyzeInterval);
+        const error = await response.json();
+        throw new Error(error.error || "Upload failed");
       }
 
-      const result = await response.json()
-      
+      const result = await response.json();
+
+      if (analyzeInterval) clearInterval(analyzeInterval);
+
+      // Phase 3: Extracting data (60-100%)
+      setUploadState((prev) => ({
+        ...prev,
+        message: "Extracting data...",
+        progress: 60,
+      }));
+
+      extractInterval = setInterval(() => {
+        setUploadState((prev) => {
+          if (prev.progress < 95) {
+            return { ...prev, progress: prev.progress + 2 };
+          }
+          return prev;
+        });
+      }, 80);
+
+      // Wait a bit to show extracting phase
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       if (!result.success) {
-        clearInterval(progressInterval)
-        throw new Error(result.error || 'Processing failed')
+        if (extractInterval) clearInterval(extractInterval);
+        throw new Error(result.error || "Processing failed");
       }
 
-      clearInterval(progressInterval)
-      setUploadState(prev => ({ ...prev, progress: 100 }))
+      if (extractInterval) clearInterval(extractInterval);
+      setUploadState((prev) => ({ ...prev, progress: 100 }));
     } catch (error) {
-      clearInterval(progressInterval)
-      throw error
+      if (progressInterval) clearInterval(progressInterval);
+      if (analyzeInterval) clearInterval(analyzeInterval);
+      if (extractInterval) clearInterval(extractInterval);
+      throw error;
     }
-  }
+  };
 
   const uploadLargeFile = async (file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
+    const formData = new FormData();
+    formData.append("file", file);
 
-    setUploadState(prev => ({ ...prev, progress: 20 }))
+    setUploadState((prev) => ({
+      ...prev,
+      message: "Uploading PDF...",
+      progress: 0,
+    }));
 
-    const xhr = new XMLHttpRequest()
+    const xhr = new XMLHttpRequest();
 
     return new Promise<void>((resolve, reject) => {
-      xhr.upload.addEventListener('progress', (e) => {
+      // Phase 1: Uploading (0-40%)
+      xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
-          const percentComplete = Math.round((e.loaded / e.total) * 60)
-          setUploadState(prev => ({ ...prev, progress: percentComplete }))
+          const percentComplete = Math.round((e.loaded / e.total) * 40);
+          setUploadState((prev) => ({
+            ...prev,
+            message: "Uploading PDF...",
+            progress: percentComplete,
+          }));
         }
-      })
+      });
 
-      xhr.addEventListener('load', async () => {
+      xhr.addEventListener("load", async () => {
         if (xhr.status === 200) {
-          setUploadState(prev => ({ 
-            ...prev, 
-            progress: 70, 
+          // Phase 2: Analyzing data (40-70%)
+          setUploadState((prev) => ({
+            ...prev,
+            progress: 40,
             isProcessing: true,
-            message: 'Analyzing resume...' 
-          }))
+            message: "Analyzing data...",
+          }));
+
+          // Simulate analyzing progress
+          const analyzeInterval = setInterval(() => {
+            setUploadState((prev) => {
+              if (prev.progress < 70) {
+                return { ...prev, progress: prev.progress + 2 };
+              }
+              return prev;
+            });
+          }, 100);
+
+          // Wait to show analyzing phase
+          await new Promise((resolve) => setTimeout(resolve, 1500));
 
           try {
-            const result = JSON.parse(xhr.responseText)
+            const result = JSON.parse(xhr.responseText);
+
+            clearInterval(analyzeInterval);
+
+            // Phase 3: Extracting data (70-100%)
+            setUploadState((prev) => ({
+              ...prev,
+              message: "Extracting data...",
+              progress: 70,
+            }));
+
+            const extractInterval = setInterval(() => {
+              setUploadState((prev) => {
+                if (prev.progress < 95) {
+                  return { ...prev, progress: prev.progress + 2 };
+                }
+                return prev;
+              });
+            }, 80);
+
+            // Wait to show extracting phase
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+
             if (result.success) {
-              setUploadState(prev => ({ ...prev, progress: 100 }))
-              resolve()
+              clearInterval(extractInterval);
+              setUploadState((prev) => ({ ...prev, progress: 100 }));
+              resolve();
             } else {
-              reject(new Error(result.error || 'Processing failed'))
+              clearInterval(extractInterval);
+              reject(new Error(result.error || "Processing failed"));
             }
           } catch {
-            reject(new Error('Failed to parse response'))
+            clearInterval(analyzeInterval);
+            reject(new Error("Failed to parse response"));
           }
         } else {
           try {
-            const error = JSON.parse(xhr.responseText)
-            reject(new Error(error.error || 'Upload failed'))
+            const error = JSON.parse(xhr.responseText);
+            reject(new Error(error.error || "Upload failed"));
           } catch {
-            reject(new Error('Upload failed'))
+            reject(new Error("Upload failed"));
           }
         }
-      })
+      });
 
-      xhr.addEventListener('error', () => {
-        reject(new Error('Network error occurred'))
-      })
+      xhr.addEventListener("error", () => {
+        reject(new Error("Network error occurred"));
+      });
 
-      xhr.addEventListener('abort', () => {
-        reject(new Error('Upload cancelled'))
-      })
+      xhr.addEventListener("abort", () => {
+        reject(new Error("Upload cancelled"));
+      });
 
-      xhr.open('POST', '/api/upload')
-      xhr.send(formData)
-    })
-  }
+      xhr.open("POST", "/api/upload");
+      xhr.send(formData);
+    });
+  };
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
 
-    const files = e.dataTransfer.files
+    const files = e.dataTransfer.files;
     if (files.length > 0) {
-      const file = files[0]
-      uploadFile(file)
+      const file = files[0];
+      uploadFile(file);
     }
-  }
+  };
 
   const handleFileInput = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
+    const files = e.target.files;
     if (files && files.length > 0) {
-      uploadFile(files[0])
+      uploadFile(files[0]);
+      // Reset input value to allow re-uploading the same file
+      e.target.value = "";
     }
-  }
+  };
 
   const handleButtonClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
-  const isLoading = uploadState.isUploading || uploadState.isProcessing
+  const isLoading = uploadState.isUploading || uploadState.isProcessing;
 
   return (
     <div className="w-full">
@@ -253,19 +371,20 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
         onDrop={handleDrop}
         className={`
           relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300
-          ${isDragging 
-            ? 'border-blue-500 bg-blue-500/10 scale-[1.02]' 
-            : 'border-white/20 bg-white/5 hover:border-blue-500/50 hover:bg-white/10'
+          ${
+            isDragging
+              ? "border-blue-500 bg-blue-500/10 scale-[1.02]"
+              : "border-white/20 bg-white/5 hover:border-blue-500/50 hover:bg-white/10"
           }
-          ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+          ${isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         `}
         onClick={!isLoading ? handleButtonClick : undefined}
         role="button"
         tabIndex={isLoading ? -1 : 0}
         onKeyDown={(e) => {
-          if (!isLoading && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault()
-            handleButtonClick()
+          if (!isLoading && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            handleButtonClick();
           }
         }}
         aria-label="Upload PDF file"
@@ -311,25 +430,31 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
               </div>
             </div>
             <div>
-              <p className="text-lg font-semibold text-white">{uploadState.message}</p>
+              <p className="text-lg font-semibold text-white">
+                {uploadState.message}
+              </p>
               <div className="mt-4 w-full max-w-md mx-auto bg-white/10 rounded-full h-3 overflow-hidden">
                 <div
                   className="bg-linear-to-r from-blue-500 to-blue-400 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${uploadState.progress}%` }}
                 />
               </div>
-              <p className="mt-2 text-sm font-medium text-blue-300">{uploadState.progress}%</p>
+              <p className="mt-2 text-sm font-medium text-blue-300">
+                {uploadState.progress}%
+              </p>
             </div>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="flex justify-center">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                isDragging ? 'bg-blue-500/30 scale-110' : 'bg-blue-500/10'
-              }`}>
+              <div
+                className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                  isDragging ? "bg-blue-500/30 scale-110" : "bg-blue-500/10"
+                }`}
+              >
                 <svg
                   className={`h-10 w-10 transition-colors ${
-                    isDragging ? 'text-blue-300' : 'text-blue-400'
+                    isDragging ? "text-blue-300" : "text-blue-400"
                   }`}
                   fill="none"
                   viewBox="0 0 24 24"
@@ -346,14 +471,24 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
             </div>
             <div>
               <p className="text-xl font-bold text-white">
-                {isDragging ? '📄 Drop your PDF here' : '📤 Upload PDF Resume'}
+                {isDragging ? "📄 Drop your PDF here" : "📤 Upload PDF Resume"}
               </p>
               <p className="mt-2 text-sm text-gray-400">
                 Drag and drop your resume or click to browse
               </p>
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full">
-                <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-4 h-4 text-blue-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <p className="text-xs text-blue-300 font-medium">
                   PDF files only • Max 10MB
@@ -363,21 +498,6 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
           </div>
         )}
       </div>
-
-      {uploadState.progress > 0 && !isLoading && (
-        <div className="mt-6 p-5 bg-green-500/10 border border-green-500/20 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <p className="text-sm text-green-300 font-semibold">
-              Upload complete! Your resume has been processed.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
-  )
+  );
 }
