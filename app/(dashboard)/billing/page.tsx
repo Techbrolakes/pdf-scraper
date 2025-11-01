@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUserStats } from "@/app/actions/settings-actions";
 import { SubscriptionSection } from "@/components/settings/subscription-section";
 import { BillingStats } from "@/components/billing/billing-stats";
+import { TestCardModal } from "@/components/billing/test-card-modal";
 
 export default async function BillingPage() {
   const session = await auth();
@@ -40,6 +41,10 @@ export default async function BillingPage() {
 
       {/* Quick Stats */}
       <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">Quick Stats</h2>
+          <TestCardModal />
+        </div>
         <BillingStats
           planType={planType}
           credits={credits}
