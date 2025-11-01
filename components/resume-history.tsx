@@ -4,6 +4,17 @@ import { useState } from "react";
 import { ResumeDetailModal } from "./resume-detail-modal";
 import type { ResumeData } from "@/types/resume";
 import { toast } from "@/lib/toast";
+import {
+  DocumentIcon,
+  SearchIcon,
+  CloseIcon,
+  SortIcon,
+  ChevronDownIcon,
+  CalendarIcon,
+  FileIcon,
+  TrashIcon,
+  AlertIcon,
+} from "@/components/icons";
 
 interface ResumeHistoryItem {
   id: string;
@@ -110,19 +121,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
         
         <div className="relative">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/10">
-            <svg
-              className="h-10 w-10 text-blue-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            <DocumentIcon className="h-10 w-10 text-blue-400" />
           </div>
           <h3 className="text-xl font-bold text-white mb-2">No resumes yet</h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
@@ -142,9 +141,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  <DocumentIcon className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-bold text-white">
@@ -185,19 +182,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   className="pl-10 pr-4 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white/10 hover:bg-white/10 w-full transition-all"
                   aria-label="Search resumes by filename"
                 />
-                <svg
-                  className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-blue-400 transition-colors"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
                 {searchQuery && (
                   <button
                     onClick={() => {
@@ -206,9 +191,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                     }}
                     className="absolute right-3 top-2.5 p-0.5 hover:bg-white/10 rounded-md transition-colors"
                   >
-                    <svg className="h-4 w-4 text-gray-400 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <CloseIcon className="h-4 w-4 text-gray-400 hover:text-white" />
                   </button>
                 )}
               </div>
@@ -230,12 +213,8 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                     Oldest First
                   </option>
                 </select>
-                <svg className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-blue-400 transition-colors pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                </svg>
-                <svg className="absolute right-3 top-3.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <SortIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 group-focus-within:text-blue-400 transition-colors pointer-events-none" />
+                <ChevronDownIcon className="absolute right-3 top-3.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
@@ -257,12 +236,8 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   <option value="30days" className="bg-[#0a0a0a]">Last 30 Days</option>
                   <option value="90days" className="bg-[#0a0a0a]">Last 90 Days</option>
                 </select>
-                <svg className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <svg className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <CalendarIcon className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+                <ChevronDownIcon className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
               </div>
 
               {/* Page Count Filter */}
@@ -282,12 +257,8 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   <option value="4-5" className="bg-[#0a0a0a]">4-5 Pages</option>
                   <option value="6+" className="bg-[#0a0a0a]">6+ Pages</option>
                 </select>
-                <svg className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <svg className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <FileIcon className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+                <ChevronDownIcon className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
               </div>
 
               {/* File Size Filter */}
@@ -306,12 +277,8 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                   <option value="medium" className="bg-[#0a0a0a]">Medium (1-5MB)</option>
                   <option value="large" className="bg-[#0a0a0a]">Large (5-10MB)</option>
                 </select>
-                <svg className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <svg className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <DocumentIcon className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+                <ChevronDownIcon className="absolute right-2 top-2.5 h-3 w-3 text-gray-400 pointer-events-none" />
               </div>
 
               {/* Clear Filters Button */}
@@ -353,19 +320,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start sm:items-center gap-3 sm:gap-4">
                         <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/10">
-                          <svg
-                            className="h-6 w-6 text-blue-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
+                          <DocumentIcon className="h-6 w-6 text-blue-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm sm:text-base font-semibold text-white truncate group-hover:text-blue-300 transition-colors">
@@ -373,9 +328,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                           </p>
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                             <span className="flex items-center gap-1.5 text-xs text-gray-400">
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
+                              <CalendarIcon className="w-3.5 h-3.5" />
                               {new Date(resume.uploadedAt).toLocaleDateString(
                                 "en-US",
                                 {
@@ -389,9 +342,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                               ✓ {resume.resumeData.status}
                             </span>
                             <span className="flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 text-blue-300 text-xs font-medium rounded-lg border border-blue-500/20">
-                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                              </svg>
+                              <FileIcon className="w-3 h-3" />
                               {resume.resumeData.pages}
                             </span>
                           </div>
@@ -411,19 +362,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                         className="p-1.5 sm:p-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer border border-red-500/20 hover:border-red-500/40"
                         title="Delete resume"
                       >
-                        <svg
-                          className="h-4 w-4 sm:h-5 sm:w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
+                        <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                     </div>
                   </div>
@@ -513,19 +452,7 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-red-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
+                  <AlertIcon className="w-6 h-6 text-red-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">
