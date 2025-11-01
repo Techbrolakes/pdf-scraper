@@ -67,6 +67,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
+  events: {
+    async createUser({ user }) {
+      // Ensure new OAuth users get 300 free credits (3 free uploads)
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { credits: 300 },
+      });
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

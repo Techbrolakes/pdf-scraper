@@ -31,7 +31,7 @@ model User {
   
   
   // Subscription fields
-  credits               Int       @default(0)
+  credits               Int       @default(300)
   planType              PlanType  @default(FREE)
   stripeCustomerId      String?   @unique
   stripeSubscriptionId  String?   @unique

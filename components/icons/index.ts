@@ -13,6 +13,7 @@ export { CopyIcon } from "./copy-icon";
 export { CreditCardIcon } from "./credit-card-icon";
 export { CurrencyDollarIcon } from "./currency-dollar-icon";
 export { DocumentIcon } from "./document-icon";
+export { DownloadIcon } from "./download-icon";
 export { ExclamationCircleIcon } from "./exclamation-circle-icon";
 export { ExclamationTriangleIcon } from "./exclamation-triangle-icon";
 export { FileIcon } from "./file-icon";

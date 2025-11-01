@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
               Didn&apos;t receive the email? Check your spam folder or{" "}
               <button
                 onClick={() => setEmailSent(false)}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
               >
                 try again
               </button>
@@ -148,7 +148,7 @@ export default function ForgotPasswordPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer"
               disabled={isLoading}
             >
               {isLoading ? (
