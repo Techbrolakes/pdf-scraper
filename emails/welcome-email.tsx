@@ -62,6 +62,14 @@ export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
             you transform your resume analysis experience.
           </Text>
 
+          <Section style={freeCreditsBox}>
+            <Text style={freeCreditsText}>
+              🎁 <strong>Welcome Gift:</strong> You&apos;ve been credited with{" "}
+              <strong style={creditsHighlight}>300 credits (3 free uploads)</strong>{" "}
+              to get you started!
+            </Text>
+          </Section>
+
           <Section style={featuresBox}>
             <Text style={featuresTitle}>What you can do with ResuméAI:</Text>
             <Text style={featureItem}>
@@ -173,6 +181,27 @@ const text = {
   fontSize: "16px",
   lineHeight: "24px",
   color: "#4a5568",
+};
+
+const freeCreditsBox = {
+  margin: "24px 0",
+  padding: "20px",
+  backgroundColor: "#EBF5FF",
+  borderRadius: "8px",
+  border: "2px solid #1447E6",
+  textAlign: "center" as const,
+};
+
+const freeCreditsText = {
+  margin: "0",
+  fontSize: "16px",
+  lineHeight: "24px",
+  color: "#1a1a1a",
+};
+
+const creditsHighlight = {
+  color: "#1447E6",
+  fontWeight: "700" as const,
 };
 
 const featuresBox = {

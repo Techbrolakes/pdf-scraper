@@ -8,7 +8,7 @@ export function CreditAlerts({ credits }: CreditAlertsProps) {
   return (
     <>
       {/* Low Credits Warning */}
-      {credits < 500 && credits > 0 && (
+      {credits < 300 && credits > 0 && (
         <div className="mb-6 bg-orange-500/10 border border-orange-500/20 rounded-2xl p-5">
           <div className="flex items-start gap-4">
             <div className="shrink-0 w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
