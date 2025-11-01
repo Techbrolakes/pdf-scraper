@@ -171,8 +171,11 @@ export function AccountSection() {
                     htmlFor="confirmation"
                     className="block text-sm font-medium text-gray-300 mb-2"
                   >
-                    Type <span className="font-mono font-bold text-red-400">DELETE</span> to
-                    confirm
+                    Type{" "}
+                    <span className="font-mono font-bold text-red-400">
+                      DELETE
+                    </span>{" "}
+                    to confirm
                   </label>
                   <input
                     {...register("confirmation")}

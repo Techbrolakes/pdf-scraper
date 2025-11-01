@@ -59,6 +59,7 @@ export default async function DashboardLayout({
                   Dashboard
                 </Link>
                 <Link
+                  id="sidebar-billing"
                   href="/billing"
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200 group"
                 >
@@ -66,6 +67,7 @@ export default async function DashboardLayout({
                   Billing
                 </Link>
                 <Link
+                  id="sidebar-settings"
                   href="/settings"
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200 group"
                 >
