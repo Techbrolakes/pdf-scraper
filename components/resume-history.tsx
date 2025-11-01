@@ -103,27 +103,32 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
 
   if (resumes.length === 0) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
-          <svg
-            className="h-8 w-8 text-blue-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
+      <div className="relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
+        {/* Decorative background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/10">
+            <svg
+              className="h-10 w-10 text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">No resumes yet</h3>
+          <p className="text-sm text-gray-400 max-w-md mx-auto">
+            Upload your first PDF resume to get started with AI-powered data extraction and analysis.
+          </p>
         </div>
-        <h3 className="text-lg font-semibold text-white">No resumes yet</h3>
-        <p className="mt-2 text-gray-400">
-          Upload your first PDF resume to get started with AI-powered data
-          extraction.
-        </p>
       </div>
     );
   }
@@ -132,26 +137,33 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
     <>
       <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
         {/* Header with search and sort */}
-        <div className="p-4 sm:p-6 border-b border-white/10 bg-linear-to-br from-white/5 to-transparent">
+        <div className="p-4 sm:p-6 border-b border-white/10">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">
-                  Resume History
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
-                  {resumes.length} {resumes.length === 1 ? 'resume' : 'resumes'} uploaded
-                </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">
+                    Resume History
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
+                    {resumes.length} {resumes.length === 1 ? 'resume' : 'resumes'} uploaded
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {(dateRange !== "all" || pageCount !== "all" || fileSize !== "all") && (
-                  <div className="px-2.5 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full">
+                  <div className="px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                     <span className="text-xs font-semibold text-purple-300">
-                      Filtered
+                      🔍 Filtered
                     </span>
                   </div>
                 )}
-                <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
+                <div className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                   <span className="text-xs font-semibold text-blue-300">
                     {filteredResumes.length} shown
                   </span>
@@ -328,18 +340,21 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
           </div>
         ) : (
           <>
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-white/5">
               {paginatedResumes.map((resume) => (
                 <div
                   key={resume.id}
-                  className="p-4 sm:p-6 hover:bg-white/5 transition-all duration-200 group"
+                  className="p-4 sm:p-6 hover:bg-white/5 transition-all duration-200 group relative"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                  {/* Hover gradient effect */}
+                  <div className="absolute inset-0 bg-linear-to-r from-blue-500/0 via-blue-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  
+                  <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/10">
                           <svg
-                            className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400"
+                            className="h-6 w-6 text-blue-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -353,30 +368,31 @@ export function ResumeHistory({ resumes, onDelete }: ResumeHistoryProps) {
                           </svg>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm sm:text-base font-semibold text-white truncate">
+                          <p className="text-sm sm:text-base font-semibold text-white truncate group-hover:text-blue-300 transition-colors">
                             {resume.fileName}
                           </p>
-                          <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-1.5 flex-wrap">
-                            <p className="text-xs text-gray-400">
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
                               {new Date(resume.uploadedAt).toLocaleDateString(
                                 "en-US",
                                 {
                                   month: "short",
                                   day: "numeric",
+                                  year: "numeric"
                                 }
                               )}
-                            </p>
-                            <span className="hidden sm:inline text-gray-600">
-                              •
                             </span>
-                            <span className="px-2 py-0.5 bg-green-500/20 text-green-300 text-xs font-medium rounded-full border border-green-500/30">
-                              {resume.resumeData.status}
+                            <span className="px-2.5 py-1 bg-green-500/10 text-green-300 text-xs font-medium rounded-lg border border-green-500/20">
+                              ✓ {resume.resumeData.status}
                             </span>
-                            <span className="hidden sm:inline text-gray-600">
-                              •
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {resume.resumeData.pages}p
+                            <span className="flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 text-blue-300 text-xs font-medium rounded-lg border border-blue-500/20">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              </svg>
+                              {resume.resumeData.pages}
                             </span>
                           </div>
                         </div>
