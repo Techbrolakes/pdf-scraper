@@ -24,12 +24,13 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with 300 free credits (3 free uploads)
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
+        credits: 300,
       },
     });
 

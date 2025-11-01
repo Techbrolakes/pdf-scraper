@@ -56,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${satoshi.variable} antialiased bg-background min-h-screen font-sans`}
+        className={`${satoshi.variable} antialiased bg-background min-h-screen font-sans` }
       >
         <NextTopLoader
           color="#1447E6"
