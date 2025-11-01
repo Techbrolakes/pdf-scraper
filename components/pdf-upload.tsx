@@ -104,27 +104,43 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
     const formData = new FormData()
     formData.append('file', file)
 
-    setUploadState(prev => ({ ...prev, progress: 30 }))
+    // Simulate smooth progress animation
+    const progressInterval = setInterval(() => {
+      setUploadState(prev => {
+        if (prev.progress < 90) {
+          return { ...prev, progress: prev.progress + 2 }
+        }
+        return prev
+      })
+    }, 100)
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    })
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
 
-    setUploadState(prev => ({ ...prev, progress: 60, message: 'Extracting data...' }))
+      setUploadState(prev => ({ ...prev, message: 'Extracting data...' }))
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Upload failed')
+      if (!response.ok) {
+        clearInterval(progressInterval)
+        const error = await response.json()
+        throw new Error(error.error || 'Upload failed')
+      }
+
+      const result = await response.json()
+      
+      if (!result.success) {
+        clearInterval(progressInterval)
+        throw new Error(result.error || 'Processing failed')
+      }
+
+      clearInterval(progressInterval)
+      setUploadState(prev => ({ ...prev, progress: 100 }))
+    } catch (error) {
+      clearInterval(progressInterval)
+      throw error
     }
-
-    const result = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Processing failed')
-    }
-
-    setUploadState(prev => ({ ...prev, progress: 100 }))
   }
 
   const uploadLargeFile = async (file: File) => {
@@ -236,8 +252,11 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`
-          relative border-2 border-dashed rounded-lg p-8 text-center transition-all
-          ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
+          relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300
+          ${isDragging 
+            ? 'border-blue-500 bg-blue-500/10 scale-[1.02]' 
+            : 'border-white/20 bg-white/5 hover:border-blue-500/50 hover:bg-white/10'
+          }
           ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
         onClick={!isLoading ? handleButtonClick : undefined}
@@ -264,77 +283,99 @@ export function PDFUpload({ onUploadSuccess }: { onUploadSuccess?: () => void })
         />
 
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex justify-center">
-              <svg
-                className="animate-spin h-12 w-12 text-blue-600"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-10 w-10 text-blue-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
             <div>
-              <p className="text-lg font-medium text-gray-900">{uploadState.message}</p>
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+              <p className="text-lg font-semibold text-white">{uploadState.message}</p>
+              <div className="mt-4 w-full max-w-md mx-auto bg-white/10 rounded-full h-3 overflow-hidden">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-linear-to-r from-blue-500 to-blue-400 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${uploadState.progress}%` }}
                 />
               </div>
-              <p className="mt-1 text-sm text-gray-500">{uploadState.progress}%</p>
+              <p className="mt-2 text-sm font-medium text-blue-300">{uploadState.progress}%</p>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex justify-center">
-              <svg
-                className="h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                isDragging ? 'bg-blue-500/30 scale-110' : 'bg-blue-500/10'
+              }`}>
+                <svg
+                  className={`h-10 w-10 transition-colors ${
+                    isDragging ? 'text-blue-300' : 'text-blue-400'
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+              </div>
             </div>
             <div>
-              <p className="text-lg font-medium text-gray-900">
-                {isDragging ? 'Drop your PDF here' : 'Upload PDF Resume'}
+              <p className="text-xl font-bold text-white">
+                {isDragging ? '📄 Drop your PDF here' : '📤 Upload PDF Resume'}
               </p>
-              <p className="mt-1 text-sm text-gray-500">
-                Drag and drop or click to browse
+              <p className="mt-2 text-sm text-gray-400">
+                Drag and drop your resume or click to browse
               </p>
-              <p className="mt-1 text-xs text-gray-400">
-                PDF files only, max 10MB
-              </p>
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full">
+                <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs text-blue-300 font-medium">
+                  PDF files only • Max 10MB
+                </p>
+              </div>
             </div>
           </div>
         )}
       </div>
 
       {uploadState.progress > 0 && !isLoading && (
-        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-800 font-medium">
-            ✓ Upload complete! Your resume has been processed.
-          </p>
+        <div className="mt-6 p-5 bg-green-500/10 border border-green-500/20 rounded-2xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-sm text-green-300 font-semibold">
+              Upload complete! Your resume has been processed.
+            </p>
+          </div>
         </div>
       )}
     </div>

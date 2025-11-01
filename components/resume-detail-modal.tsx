@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import type { ResumeData } from '@/types/resume'
+import { useState } from "react";
+import type { ResumeData } from "@/types/resume";
 
 interface ResumeDetailModalProps {
-  isOpen: boolean
-  onClose: () => void
-  fileName: string
-  uploadedAt: Date
-  resumeData: ResumeData
+  isOpen: boolean;
+  onClose: () => void;
+  fileName: string;
+  uploadedAt: Date;
+  resumeData: ResumeData;
 }
 
 export function ResumeDetailModal({
@@ -18,119 +18,134 @@ export function ResumeDetailModal({
   uploadedAt,
   resumeData,
 }: ResumeDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'experience' | 'education' | 'other'>('profile')
+  const [activeTab, setActiveTab] = useState<
+    "profile" | "experience" | "education" | "other"
+  >("profile");
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const handleDownloadJSON = () => {
-    const dataStr = JSON.stringify(resumeData, null, 2)
-    const dataBlob = new Blob([dataStr], { type: 'application/json' })
-    const url = URL.createObjectURL(dataBlob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${fileName.replace('.pdf', '')}_data.json`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
+    const dataStr = JSON.stringify(resumeData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName.replace(".pdf", "")}_data.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleCopyData = async () => {
     try {
-      const dataStr = JSON.stringify(resumeData, null, 2)
-      await navigator.clipboard.writeText(dataStr)
+      const dataStr = JSON.stringify(resumeData, null, 2);
+      await navigator.clipboard.writeText(dataStr);
       // Using a simple alert for now - could be replaced with toast in the future
-      alert('Data copied to clipboard!')
+      alert("Data copied to clipboard!");
     } catch (error) {
-      console.error('Failed to copy:', error)
-      alert('Failed to copy data to clipboard')
+      console.error("Failed to copy:", error);
+      alert("Failed to copy data to clipboard");
     }
-  }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" onClick={onClose}>
-      <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4" onClick={onClose}>
+      <div className="w-full max-w-5xl">
         {/* Backdrop */}
-        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
+        <div className="fixed inset-0 bg-main-background/80 backdrop-blur-sm transition-opacity" />
 
         {/* Modal */}
         <div
-          className="relative w-full max-w-5xl bg-white rounded-lg shadow-xl transform transition-all"
+          className="relative w-full h-[90vh] flex flex-col bg-main-background border border-white/10 rounded-2xl shadow-2xl transform transition-all"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="border-b border-gray-200 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">{fileName}</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Uploaded on {new Date(uploadedAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
+          <div className="border-b border-white/10 px-4 sm:px-6 py-4 sm:py-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white truncate">
+                  {fileName}
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                  Uploaded on{" "}
+                  {new Date(uploadedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                 <button
                   onClick={handleDownloadJSON}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all border border-blue-500/20 hover:border-blue-500/40"
                 >
-                  Download JSON
+                  Download
                 </button>
                 <button
                   onClick={handleCopyData}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-white/10 rounded-xl transition-all border border-white/10 hover:border-white/20"
                 >
-                  Copy Data
+                  Copy
                 </button>
                 <button
                   onClick={onClose}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-xl cursor-pointer"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-4 mt-4 border-b border-gray-200">
+            <div className="flex gap-2 mt-4 sm:mt-5 overflow-x-auto pb-2 -mb-2 scrollbar-hide">
               <button
-                onClick={() => setActiveTab('profile')}
-                className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'profile'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                onClick={() => setActiveTab("profile")}
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
+                  activeTab === "profile"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
                 Profile
               </button>
               <button
-                onClick={() => setActiveTab('experience')}
-                className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'experience'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                onClick={() => setActiveTab("experience")}
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
+                  activeTab === "experience"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
                 Experience
               </button>
               <button
-                onClick={() => setActiveTab('education')}
-                className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'education'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                onClick={() => setActiveTab("education")}
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
+                  activeTab === "education"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
                 Education
               </button>
               <button
-                onClick={() => setActiveTab('other')}
-                className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'other'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                onClick={() => setActiveTab("other")}
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
+                  activeTab === "other"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
                 Other
@@ -139,17 +154,20 @@ export function ResumeDetailModal({
           </div>
 
           {/* Content */}
-          <div className="px-6 py-6 max-h-[calc(100vh-300px)] overflow-y-auto">
-            {activeTab === 'profile' && (
-              <ProfileSection profile={resumeData.profile} skills={resumeData.skills} />
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 min-h-0">
+            {activeTab === "profile" && (
+              <ProfileSection
+                profile={resumeData.profile}
+                skills={resumeData.skills}
+              />
             )}
-            {activeTab === 'experience' && (
+            {activeTab === "experience" && (
               <ExperienceSection workExperiences={resumeData.workExperiences} />
             )}
-            {activeTab === 'education' && (
+            {activeTab === "education" && (
               <EducationSection educations={resumeData.educations} />
             )}
-            {activeTab === 'other' && (
+            {activeTab === "other" && (
               <OtherSection
                 licenses={resumeData.licenses}
                 languages={resumeData.languages}
@@ -162,38 +180,57 @@ export function ResumeDetailModal({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-function ProfileSection({ profile, skills }: { profile: ResumeData['profile']; skills: string[] }) {
+function ProfileSection({
+  profile,
+  skills,
+}: {
+  profile: ResumeData["profile"];
+  skills: string[];
+}) {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <InfoField label="Name" value={`${profile.name || ''} ${profile.surname || ''}`} />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <InfoField
+          label="Name"
+          value={`${profile.name || ""} ${profile.surname || ""}`}
+        />
         <InfoField label="Email" value={profile.email} />
         <InfoField label="Headline" value={profile.headline} />
-        <InfoField label="Location" value={`${profile.city || ''}, ${profile.country || ''}`} />
+        <InfoField
+          label="Location"
+          value={`${profile.city || ""}, ${profile.country || ""}`}
+        />
         <InfoField label="LinkedIn" value={profile.linkedIn} link />
         <InfoField label="Website" value={profile.website} link />
-        <InfoField label="Remote Work" value={profile.remote ? 'Yes' : 'No'} />
-        <InfoField label="Open to Relocation" value={profile.relocation ? 'Yes' : 'No'} />
+        <InfoField label="Remote Work" value={profile.remote ? "Yes" : "No"} />
+        <InfoField
+          label="Open to Relocation"
+          value={profile.relocation ? "Yes" : "No"}
+        />
       </div>
 
       {profile.professionalSummary && (
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Professional Summary</h3>
-          <p className="text-gray-900 leading-relaxed">{profile.professionalSummary}</p>
+          <h3 className="text-sm font-semibold text-white mb-2">
+            Professional Summary
+          </h3>
+          <p className="text-gray-300 leading-relaxed">
+            {profile.professionalSummary}
+          </p>
         </div>
       )}
 
       {skills.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Skills</h3>
+          <h3 className="text-sm font-semibold text-white mb-3">Skills</h3>
           <div className="flex flex-wrap gap-2">
             {skills.map((skill, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full"
+                className="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30"
               >
                 {skill}
               </span>
@@ -202,76 +239,100 @@ function ProfileSection({ profile, skills }: { profile: ResumeData['profile']; s
         </div>
       )}
     </div>
-  )
+  );
 }
 
-function ExperienceSection({ workExperiences }: { workExperiences: ResumeData['workExperiences'] }) {
+function ExperienceSection({
+  workExperiences,
+}: {
+  workExperiences: ResumeData["workExperiences"];
+}) {
   if (workExperiences.length === 0) {
-    return <EmptyState message="No work experience found" />
+    return <EmptyState message="No work experience found" />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {workExperiences.map((exp, index) => (
-        <div key={index} className="border-l-4 border-blue-500 pl-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{exp.jobTitle}</h3>
-              <p className="text-gray-700 font-medium">{exp.company}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">
-                {exp.startMonth}/{exp.startYear} -{' '}
-                {exp.current ? 'Present' : `${exp.endMonth}/${exp.endYear}`}
+        <div
+          key={index}
+          className="border-l-4 border-blue-500 pl-3 sm:pl-4 py-2"
+        >
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
+            <div className="flex-1">
+              <h3 className="text-base sm:text-lg font-semibold text-white">
+                {exp.jobTitle}
+              </h3>
+              <p className="text-sm sm:text-base text-gray-300 font-medium">
+                {exp.company}
               </p>
-              <div className="flex gap-2 mt-1">
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                  {exp.employmentType.replace('_', ' ')}
+            </div>
+            <div className="sm:text-right shrink-0">
+              <p className="text-xs sm:text-sm text-gray-400">
+                {exp.startMonth}/{exp.startYear} -{" "}
+                {exp.current ? "Present" : `${exp.endMonth}/${exp.endYear}`}
+              </p>
+              <div className="flex gap-2 mt-1 sm:justify-end flex-wrap">
+                <span className="px-2 py-1 bg-white/5 text-gray-300 text-xs rounded-lg border border-white/10">
+                  {exp.employmentType.replace("_", " ")}
                 </span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                <span className="px-2 py-1 bg-white/5 text-gray-300 text-xs rounded-lg border border-white/10">
                   {exp.locationType}
                 </span>
               </div>
             </div>
           </div>
           {exp.description && (
-            <p className="mt-3 text-gray-600 leading-relaxed">{exp.description}</p>
+            <p className="mt-3 text-gray-400 leading-relaxed">
+              {exp.description}
+            </p>
           )}
         </div>
       ))}
     </div>
-  )
+  );
 }
 
-function EducationSection({ educations }: { educations: ResumeData['educations'] }) {
+function EducationSection({
+  educations,
+}: {
+  educations: ResumeData["educations"];
+}) {
   if (educations.length === 0) {
-    return <EmptyState message="No education found" />
+    return <EmptyState message="No education found" />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {educations.map((edu, index) => (
-        <div key={index} className="border-l-4 border-green-500 pl-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{edu.school}</h3>
-              <p className="text-gray-700 font-medium">
-                {edu.degree.replace('_', ' ')} {edu.major && `in ${edu.major}`}
+        <div
+          key={index}
+          className="border-l-4 border-green-500 pl-3 sm:pl-4 py-2"
+        >
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
+            <div className="flex-1">
+              <h3 className="text-base sm:text-lg font-semibold text-white">
+                {edu.school}
+              </h3>
+              <p className="text-sm sm:text-base text-gray-300 font-medium">
+                {edu.degree.replace("_", " ")} {edu.major && `in ${edu.major}`}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">
-                {edu.startYear} - {edu.current ? 'Present' : edu.endYear}
+            <div className="sm:text-right shrink-0">
+              <p className="text-xs sm:text-sm text-gray-400">
+                {edu.startYear} - {edu.current ? "Present" : edu.endYear}
               </p>
             </div>
           </div>
           {edu.description && (
-            <p className="mt-3 text-gray-600 leading-relaxed">{edu.description}</p>
+            <p className="mt-3 text-gray-400 leading-relaxed">
+              {edu.description}
+            </p>
           )}
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 function OtherSection({
@@ -281,27 +342,34 @@ function OtherSection({
   publications,
   honors,
 }: {
-  licenses: ResumeData['licenses']
-  languages: ResumeData['languages']
-  achievements: ResumeData['achievements']
-  publications: ResumeData['publications']
-  honors: ResumeData['honors']
+  licenses: ResumeData["licenses"];
+  languages: ResumeData["languages"];
+  achievements: ResumeData["achievements"];
+  publications: ResumeData["publications"];
+  honors: ResumeData["honors"];
 }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Licenses */}
       {licenses.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Licenses & Certifications</h3>
-          <div className="space-y-4">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
+            Licenses & Certifications
+          </h3>
+          <div className="space-y-3 sm:space-y-4">
             {licenses.map((license, index) => (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900">{license.name}</h4>
-                <p className="text-sm text-gray-600">
+              <div
+                key={index}
+                className="bg-white/5 border border-white/10 p-4 rounded-xl"
+              >
+                <h4 className="font-medium text-white">{license.name}</h4>
+                <p className="text-sm text-gray-400">
                   {license.issuer} • {license.issueYear}
                 </p>
                 {license.description && (
-                  <p className="mt-2 text-sm text-gray-700">{license.description}</p>
+                  <p className="mt-2 text-sm text-gray-300">
+                    {license.description}
+                  </p>
                 )}
               </div>
             ))}
@@ -312,12 +380,17 @@ function OtherSection({
       {/* Languages */}
       {languages.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
+            Languages
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {languages.map((lang, index) => (
-              <div key={index} className="bg-gray-50 p-3 rounded-lg">
-                <p className="font-medium text-gray-900">{lang.language}</p>
-                <p className="text-sm text-gray-600">{lang.level}</p>
+              <div
+                key={index}
+                className="bg-white/5 border border-white/10 p-3 rounded-xl"
+              >
+                <p className="font-medium text-white">{lang.language}</p>
+                <p className="text-sm text-gray-400">{lang.level}</p>
               </div>
             ))}
           </div>
@@ -327,16 +400,23 @@ function OtherSection({
       {/* Achievements */}
       {achievements.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Achievements</h3>
-          <div className="space-y-4">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
+            Achievements
+          </h3>
+          <div className="space-y-3 sm:space-y-4">
             {achievements.map((achievement, index) => (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900">{achievement.title}</h4>
-                <p className="text-sm text-gray-600">
+              <div
+                key={index}
+                className="bg-white/5 border border-white/10 p-4 rounded-xl"
+              >
+                <h4 className="font-medium text-white">{achievement.title}</h4>
+                <p className="text-sm text-gray-400">
                   {achievement.organization} • {achievement.achieveDate}
                 </p>
                 {achievement.description && (
-                  <p className="mt-2 text-sm text-gray-700">{achievement.description}</p>
+                  <p className="mt-2 text-sm text-gray-300">
+                    {achievement.description}
+                  </p>
                 )}
               </div>
             ))}
@@ -347,26 +427,34 @@ function OtherSection({
       {/* Publications */}
       {publications.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Publications</h3>
-          <div className="space-y-4">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
+            Publications
+          </h3>
+          <div className="space-y-3 sm:space-y-4">
             {publications.map((pub, index) => (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900">{pub.title}</h4>
-                <p className="text-sm text-gray-600">
-                  {pub.publisher} • {new Date(pub.publicationDate).toLocaleDateString()}
+              <div
+                key={index}
+                className="bg-white/5 border border-white/10 p-4 rounded-xl"
+              >
+                <h4 className="font-medium text-white">{pub.title}</h4>
+                <p className="text-sm text-gray-400">
+                  {pub.publisher} •{" "}
+                  {new Date(pub.publicationDate).toLocaleDateString()}
                 </p>
                 {pub.publicationUrl && (
                   <a
                     href={pub.publicationUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline mt-1 inline-block"
+                    className="text-sm text-blue-400 hover:text-blue-300 hover:underline mt-1 inline-block transition-colors"
                   >
                     View Publication →
                   </a>
                 )}
                 {pub.description && (
-                  <p className="mt-2 text-sm text-gray-700">{pub.description}</p>
+                  <p className="mt-2 text-sm text-gray-300">
+                    {pub.description}
+                  </p>
                 )}
               </div>
             ))}
@@ -377,16 +465,23 @@ function OtherSection({
       {/* Honors */}
       {honors.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Honors & Awards</h3>
-          <div className="space-y-4">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
+            Honors & Awards
+          </h3>
+          <div className="space-y-3 sm:space-y-4">
             {honors.map((honor, index) => (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900">{honor.title}</h4>
-                <p className="text-sm text-gray-600">
+              <div
+                key={index}
+                className="bg-white/5 border border-white/10 p-4 rounded-xl"
+              >
+                <h4 className="font-medium text-white">{honor.title}</h4>
+                <p className="text-sm text-gray-400">
                   {honor.issuer} • {honor.issueMonth}/{honor.issueYear}
                 </p>
                 {honor.description && (
-                  <p className="mt-2 text-sm text-gray-700">{honor.description}</p>
+                  <p className="mt-2 text-sm text-gray-300">
+                    {honor.description}
+                  </p>
                 )}
               </div>
             ))}
@@ -394,35 +489,43 @@ function OtherSection({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-function InfoField({ label, value, link }: { label: string; value: string | null; link?: boolean }) {
-  if (!value) return null
+function InfoField({
+  label,
+  value,
+  link,
+}: {
+  label: string;
+  value: string | null;
+  link?: boolean;
+}) {
+  if (!value) return null;
 
   return (
     <div>
-      <p className="text-sm font-medium text-gray-500">{label}</p>
+      <p className="text-sm font-medium text-gray-400">{label}</p>
       {link && value ? (
         <a
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 hover:underline mt-1 block"
+          className="text-blue-400 hover:text-blue-300 hover:underline mt-1 block transition-colors"
         >
           {value}
         </a>
       ) : (
-        <p className="text-gray-900 mt-1">{value}</p>
+        <p className="text-white mt-1">{value}</p>
       )}
     </div>
-  )
+  );
 }
 
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="text-center py-12">
-      <p className="text-gray-500">{message}</p>
+      <p className="text-gray-400">{message}</p>
     </div>
-  )
+  );
 }
