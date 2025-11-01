@@ -9,6 +9,10 @@ import {
 } from "@/lib/validations/settings";
 import { updateProfile } from "@/app/actions/settings-actions";
 import { toast } from "sonner";
+import { NameInput } from "@/components/forms/name-input";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Mail } from "lucide-react";
 
 interface ProfileSectionProps {
   initialName: string | null;
@@ -46,51 +50,39 @@ export function ProfileSection({ initialName, email }: ProfileSectionProps) {
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+      <h2 className="text-lg font-semibold text-white mb-6">
         Profile Information
       </h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Display Name
-          </label>
-          <input
-            {...register("name")}
-            type="text"
-            id="name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter your name"
-          />
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-          )}
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <NameInput
+          label="Display Name"
+          placeholder="Enter your name"
+          register={register("name")}
+          error={errors.name?.message}
+        />
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-white text-sm font-medium">
             Email Address
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email || ""}
-            disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-          />
-          <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              id="email"
+              type="email"
+              value={email || ""}
+              disabled
+              className="pl-11 bg-white/5 border-white/10 text-gray-400 placeholder:text-gray-500 h-12 cursor-not-allowed opacity-60"
+            />
+          </div>
+          <p className="text-xs text-gray-500">Email cannot be changed</p>
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all duration-200 hover:scale-105"
         >
           {isLoading ? "Saving..." : "Save Changes"}
         </button>
