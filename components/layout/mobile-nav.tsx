@@ -25,6 +25,7 @@ export function MobileNav() {
 
         {/* Billing Tab */}
         <Link
+          id="mobile-billing"
           href="/billing"
           className={`flex flex-col items-center justify-center gap-1 transition-colors group ${
             pathname === "/billing"
@@ -38,6 +39,7 @@ export function MobileNav() {
 
         {/* Settings Tab */}
         <Link
+          id="mobile-settings"
           href="/settings"
           className={`flex flex-col items-center justify-center gap-1 transition-colors group ${
             pathname === "/settings"

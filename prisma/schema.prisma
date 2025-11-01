@@ -36,6 +36,10 @@ model User {
   stripeCustomerId      String?   @unique
   stripeSubscriptionId  String?   @unique
   
+  // Onboarding fields
+  hasCompletedTour      Boolean   @default(false)
+  tourCompletedAt       DateTime?
+  
   accounts      Account[]
   sessions      Session[]
   resumeHistory ResumeHistory[]

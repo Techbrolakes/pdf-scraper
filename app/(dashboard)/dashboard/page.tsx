@@ -4,6 +4,7 @@ import { ResumeHistory } from "@/components/resume-history";
 import { PDFUpload } from "@/components/pdf-upload";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { CreditAlerts } from "@/components/dashboard/credit-alerts";
+import { ProductTour } from "@/components/product-tour";
 import { revalidatePath } from "next/cache";
 import type { ResumeData } from "@/types/resume";
 import { prisma } from "@/lib/prisma";
@@ -45,12 +46,14 @@ export default async function DashboardPage() {
       select: {
         credits: true,
         planType: true,
+        hasCompletedTour: true,
       },
     }),
   ]);
 
   const credits = user?.credits || 0;
   const planType = user?.planType || "FREE";
+  const shouldShowTour = !user?.hasCompletedTour;
 
   // Transform resumes data to match expected type
   const typedResumes = allResumes.map((resume) => ({
@@ -72,11 +75,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-4 py-6 sm:px-0">
+      {/* Product Tour */}
+      <ProductTour shouldShowTour={shouldShowTour} />
+
+      {/* Welcome Tour Anchor (invisible) */}
+      <div id="welcome-tour" className="absolute top-0 left-0" />
+
       {/* Credit Alerts */}
       <CreditAlerts credits={credits} />
 
       {/* Stats Section */}
-      <div className="mb-8">
+      <div id="stats-cards" className="mb-8">
         <StatsCards
           credits={credits}
           planType={planType}
@@ -93,12 +102,12 @@ export default async function DashboardPage() {
       </div>
 
       {/* Upload Section */}
-      <div className="mb-20">
+      <div id="upload-zone" className="mb-20">
         <PDFUpload onUploadSuccess={refreshDashboard} />
       </div>
 
       {/* Resume History */}
-      <div className="mt-8">
+      <div id="resume-history" className="mt-8">
         <ResumeHistory resumes={typedResumes} onDelete={handleDelete} />
       </div>
     </div>
