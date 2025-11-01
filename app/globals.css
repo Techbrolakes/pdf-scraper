@@ -124,3 +124,149 @@ html.lenis body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Driver.js Custom Styles */
+.driver-popover {
+  background: #030712 !important; 
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  border-radius: 20px !important;
+  color: white !important;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 20px 40px -10px rgba(0, 0, 0, 0.7),
+    0 10px 20px -5px rgba(59, 130, 246, 0.2) !important;
+  max-width: 420px !important;
+  padding: 24px !important;
+  font-family: var(--font-satoshi), sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+.driver-popover-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: white !important;
+  margin-bottom: 12px !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.3 !important;
+}
+
+.driver-popover-description {
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  margin-bottom: 20px !important;
+}
+
+.driver-popover-progress-text {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: rgba(59, 130, 246, 0.9) !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  display: inline-block !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+.driver-popover-navigation-btns {
+  gap: 12px !important;
+  justify-content: flex-end !important;
+  margin-top: 12px !important;
+  align-items: center !important;
+}
+
+.driver-popover-prev-btn,
+.driver-popover-next-btn,
+.driver-popover-close-btn {
+  padding: 11px 24px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: none !important;
+  cursor: pointer !important;
+  letter-spacing: -0.01em !important;
+}
+
+.driver-popover-prev-btn {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  border: none !important;
+  padding: 11px 16px !important;
+  font-weight: 500 !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.driver-popover-next-btn {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: white !important;
+  position: relative !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  border: 1px solid rgba(59, 130, 246, 0.25) !important;
+}
+
+.driver-popover-next-btn::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent) !important;
+  transition: left 0.5s !important;
+}
+
+.driver-popover-next-btn:hover {
+  transform: translateY(-1px) !important;
+  background: rgba(59, 130, 246, 0.25) !important;
+  color: white !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 
+    0 0 0 1px rgba(59, 130, 246, 0.3) inset,
+    0 4px 12px -2px rgba(59, 130, 246, 0.3) !important;
+}
+
+.driver-popover-next-btn:hover::before {
+  left: 100% !important;
+}
+
+.driver-popover-next-btn:active {
+  transform: translateY(0px) !important;
+}
+
+/* Close button - subtle style */
+.driver-popover-close-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 11px 20px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  margin-right: auto !important;
+}
+
+.driver-popover-close-btn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+.driver-overlay {
+  background: rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(0.2px) !important;
+}
+
+.driver-active-element {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 4px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3) !important;
+}
