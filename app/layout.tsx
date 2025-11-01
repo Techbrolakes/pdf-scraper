@@ -3,8 +3,8 @@ import { Toaster } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import NextTopLoader from "nextjs-toploader";
 import { LenisProvider } from "@/components/providers/lenis-provider";
-import "./globals.css";
-import { satoshi } from "./fonts";
+import "@/components/theme/globals.scss";
+import { satoshi } from "@/components/theme/fonts";
 
 export const metadata: Metadata = {
   title: {
