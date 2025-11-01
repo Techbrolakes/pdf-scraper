@@ -5,7 +5,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 ## Features
 
 ### Core Features
-- 🔐 **Authentication**: Secure email/password authentication with NextAuth.js
+- 🔐 **Authentication**: Email/password + GitHub/Google OAuth with NextAuth.js
 - 📤 **PDF Upload**: Drag-and-drop PDF upload with file validation
 - 🤖 **AI-Powered Extraction**: OpenAI GPT-4 and Vision for intelligent data extraction
 - 📄 **Text & Image PDFs**: Support for both text-based and image-based resumes
@@ -14,7 +14,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - 🎨 **Modern UI**: Built with TailwindCSS
 - ✅ **Type Safety**: Full TypeScript with strict ENUM validation
 
-### Phase 6 Enhancements ✨
+### Additional Features
 - 🚨 **Error Handling**: Comprehensive error boundaries and user-friendly error pages
 - 🚦 **Rate Limiting**: Database-based rate limiting (10 uploads/hour per user)
 - 🔔 **Enhanced Toasts**: Rich notifications with icons and descriptions
@@ -22,9 +22,6 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - 📭 **Empty States**: Helpful empty state components with actions
 - ♿ **Accessibility**: WCAG AA compliant with keyboard navigation and screen reader support
 - ⚡ **Performance**: Code splitting, lazy loading, and performance utilities
-- 📚 **Documentation**: Comprehensive guides and usage examples
-
-### Phase 7 - Stripe Integration (NEW! 💳)
 - 💰 **Subscription Plans**: Basic ($10/month) and Pro ($20/month) plans
 - 🎫 **Credit System**: 100 credits per resume extraction
 - 💳 **Stripe Checkout**: Secure hosted checkout flow
@@ -71,28 +68,37 @@ npm install
 
 3. Set up environment variables:
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-Edit `.env` and add your configuration:
+Edit `.env.local` and add your configuration:
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/pdf_scraper?schema=public"
 
 # NextAuth
-NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_SECRET="your-secret-key-here" # Generate with: openssl rand -base64 32
 NEXTAUTH_URL="http://localhost:3000"
 
+# GitHub OAuth (see NEXTAUTH_SETUP.md for instructions)
+GITHUB_ID="your-github-oauth-client-id"
+GITHUB_SECRET="your-github-oauth-client-secret"
+
+# Google OAuth (see NEXTAUTH_SETUP.md for instructions)
+GOOGLE_ID="your-google-oauth-client-id"
+GOOGLE_SECRET="your-google-oauth-client-secret"
+
 # OpenAI
-OPENAI_API_KEY="your-openai-api-key-here"
+OPENAI_KEY="your-openai-api-key-here"
 
 # Stripe (Optional - for subscription features)
 STRIPE_SECRET_KEY="sk_test_your-stripe-secret-key-here"
-STRIPE_PUBLIC_KEY="pk_test_your-stripe-public-key-here"
 STRIPE_WEBHOOK_SECRET="whsec_your-webhook-secret-here"
 STRIPE_PRICE_BASIC="price_basic_plan_id"
 STRIPE_PRICE_PRO="price_pro_plan_id"
 ```
+
+For detailed OAuth setup instructions, see [NEXTAUTH_SETUP.md](./NEXTAUTH_SETUP.md)
 
 4. Generate Prisma client and run migrations:
 ```bash
@@ -156,9 +162,14 @@ pdf-scraper/
 
 The application uses NextAuth.js v5 with:
 - Credentials provider (email/password)
+- GitHub OAuth provider
+- Google OAuth provider
 - JWT session strategy
 - Prisma adapter for database sessions
 - Protected routes via middleware
+- Password reset flow
+
+For detailed setup instructions, see [NEXTAUTH_SETUP.md](./NEXTAUTH_SETUP.md)
 
 ## Development
 
@@ -176,35 +187,6 @@ The application uses NextAuth.js v5 with:
 - `npx prisma db push` - Push schema changes to database
 - `npx prisma migrate dev` - Create and apply migrations
 
-## Phase 1 Completed ✅
-
-- ✅ Next.js 14+ with TypeScript and App Router
-- ✅ NextAuth.js authentication
-- ✅ Prisma ORM with PostgreSQL
-- ✅ TailwindCSS styling
-- ✅ Toast notifications (Sonner)
-- ✅ Database schema (User, ResumeHistory)
-- ✅ Authentication pages (Login, Register)
-- ✅ Protected dashboard layout
-- ✅ Basic dashboard with navigation
-- ✅ Settings page
-- ✅ Protected routes middleware
-
-## Phase 2 Completed ✅
-
-- ✅ PDF upload component with drag-and-drop
-- ✅ File validation (type, size, structure)
-- ✅ Loading states with progress indicators
-- ✅ Toast notifications for all upload states
-- ✅ API route for file uploads (`/api/upload`)
-- ✅ PDF text extraction using pdf-parse
-- ✅ Support for different PDF types:
-  - Text-based PDFs: Direct text extraction
-  - Image-based PDFs: Detection (OCR in Phase 3)
-  - Hybrid PDFs: Combined approach
-- ✅ Server-side validation and error handling
-- ✅ File metadata storage in database
-- ✅ Automatic dashboard refresh after upload
 
 ## PDF Upload Implementation Details
 
@@ -255,24 +237,6 @@ Comprehensive error handling for:
 
 All errors display user-friendly messages via toast notifications.
 
-## Phase 3 Completed ✅
-
-- ✅ OpenAI GPT-4 integration for text-based PDFs
-- ✅ OpenAI GPT-4 Vision for image-based PDFs
-- ✅ Structured data extraction with exact JSON schema
-- ✅ Support for all resume sections:
-  - Profile (name, email, headline, summary, etc.)
-  - Work experiences with ENUMs (employment type, location type)
-  - Education with degree ENUMs
-  - Skills array
-  - Licenses and certifications
-  - Languages with proficiency levels
-  - Achievements
-  - Publications
-  - Honors and awards
-- ✅ Robust error handling (rate limits, timeouts, API errors)
-- ✅ Processing status indicators
-- ✅ Data validation and storage
 
 ## OpenAI Integration Details
 
@@ -357,21 +321,6 @@ All errors return user-friendly messages via toast notifications.
 5. **Save to Database** → Linked to authenticated user
 6. **Success Notification** → User can view results
 
-## Phase 4 Completed ✅
-
-- ✅ Complete dashboard with stats and quick actions
-- ✅ Resume history list with search and filtering
-- ✅ Sort by date (newest/oldest)
-- ✅ Pagination (10 items per page)
-- ✅ Detailed resume view modal with tabs
-- ✅ Display all extracted data (profile, experience, education, etc.)
-- ✅ Download as JSON functionality
-- ✅ Copy data to clipboard
-- ✅ Delete functionality with confirmation dialog
-- ✅ Loading skeletons for better UX
-- ✅ Empty states
-- ✅ Responsive design (mobile, tablet, desktop)
-- ✅ Smooth animations and transitions
 
 ## Dashboard Features
 
@@ -395,18 +344,6 @@ All errors return user-friendly messages via toast notifications.
 - **Other Section**: Licenses, languages, achievements, publications, honors
 - **Export Options**: Download JSON or copy to clipboard
 
-## Phase 5 Completed ✅
-
-- ✅ Complete settings page with sections
-- ✅ Profile information update
-- ✅ Change password functionality
-- ✅ Account deletion with cascade
-- ✅ Usage statistics display
-- ✅ Form validation with Zod
-- ✅ Password strength requirements
-- ✅ Confirmation dialogs
-- ✅ Toast notifications
-- ✅ Server actions for all operations
 
 ## Settings Page Features
 
@@ -435,44 +372,11 @@ All errors return user-friendly messages via toast notifications.
 - **Days Active**: Number of days since account creation
 - **Visual Stats**: Color-coded stat cards
 
-## Phase 6 Documentation
-
-Phase 6 has been completed with comprehensive error handling, loading states, and UI polish. See detailed documentation:
-
-- 📖 [**Phase 6 Summary**](./PHASE6_SUMMARY.md) - Complete overview of all improvements
-- 📋 [**Phase 6 Improvements**](./PHASE6_IMPROVEMENTS.md) - Detailed feature documentation
-- 💡 [**Quick Reference**](./QUICK_REFERENCE.md) - Developer quick reference card
-- 📚 [**Usage Examples**](./docs/USAGE_EXAMPLES.md) - Code examples and patterns
-- 🔄 [**Migration Guide**](./docs/MIGRATION_GUIDE.md) - How to update existing code
-- 🧪 [**Testing Guide**](./docs/TESTING_GUIDE.md) - Comprehensive testing procedures
-
-### Quick Start with Phase 6 Features
-
-```typescript
-// Enhanced toast notifications
-import { toast } from '@/lib/toast'
-toast.success('Upload complete!')
-toast.error('Upload failed', { description: 'Please try again' })
-
-// Button with loading state
-import { Button } from '@/components/ui/button'
-<Button isLoading={uploading} loadingText="Uploading...">Upload</Button>
-
-// Error boundary
-import { ErrorBoundary } from '@/components/error-boundary'
-<ErrorBoundary><YourComponent /></ErrorBoundary>
-
-// Check rate limit
-const res = await fetch('/api/rate-limit')
-const { data } = await res.json()
-console.log(`${data.remaining} uploads remaining`)
-```
-
-## Phase 7: Stripe Integration Setup
+## Stripe Integration Setup
 
 ### Overview
 
-Phase 7 adds a complete subscription and credit system using Stripe. Users can subscribe to plans that provide credits for resume processing.
+The application includes a complete subscription and credit system using Stripe. Users can subscribe to plans that provide credits for resume processing.
 
 ### Subscription Plans
 

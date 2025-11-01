@@ -29,6 +29,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
+  
   // Subscription fields
   credits               Int       @default(0)
   planType              PlanType  @default(FREE)
@@ -84,5 +85,14 @@ model ResumeHistory {
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  @@index([userId])
+    @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+
+  @@unique([email, token])
 }

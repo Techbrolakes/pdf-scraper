@@ -1,21 +1,21 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
+import { useEffect } from "react";
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Application error:', error)
-  }, [error])
+    console.error("Application error:", error);
+  }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-main-background px-4">
+      <div className="max-w-md w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg p-8 text-center">
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
           <svg
             className="h-8 w-8 text-red-600"
@@ -32,35 +32,36 @@ export default function Error({
             />
           </svg>
         </div>
-        
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">
+
+        <h2 className="text-2xl font-bold mb-3">
           Something Went Wrong
         </h2>
-        
-        <p className="text-gray-600 mb-6">
-          We encountered an unexpected error while processing your request. Please try again.
+
+        <p className="opacity-70 mb-6">
+          We encountered an unexpected error while processing your request.
+          Please try again.
         </p>
 
         {error.digest && (
-          <p className="text-xs text-gray-500 mb-6 font-mono">
+          <p className="text-xs mb-6 font-mono">
             Error ID: {error.digest}
           </p>
         )}
 
-        {process.env.NODE_ENV === 'development' && (
+        {process.env.NODE_ENV === "development" && (
           <details className="mb-6 text-left">
-            <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 mb-2">
+            <summary className="cursor-pointer text-sm mb-4">
               Error Details (Development Only)
             </summary>
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <p className="text-xs font-semibold text-gray-700 mb-2">Message:</p>
-              <pre className="text-xs text-gray-800 mb-3 overflow-auto">
+            <div className="bg-main-background p-4 rounded-lg">
+              <p className="text-xs font-semibold mb-2">Message:</p>
+              <pre className="text-xs mb-3 overflow-auto">
                 {error.message}
               </pre>
               {error.stack && (
                 <>
-                  <p className="text-xs font-semibold text-gray-700 mb-2">Stack:</p>
-                  <pre className="text-xs text-gray-800 overflow-auto max-h-40">
+                  <p className="text-xs font-semibold mb-2">Stack:</p>
+                  <pre className="text-xs overflow-auto max-h-40">
                     {error.stack}
                   </pre>
                 </>
@@ -87,5 +88,5 @@ export default function Error({
         </div>
       </div>
     </div>
-  )
+  );
 }

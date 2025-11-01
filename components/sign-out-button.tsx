@@ -8,6 +8,7 @@ export function SignOutButton() {
     <Button
       variant="outline"
       onClick={() => signOut({ callbackUrl: '/login' })}
+      className='cursor-pointer'
     >
       Sign Out
     </Button>

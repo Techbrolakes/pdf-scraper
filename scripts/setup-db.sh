@@ -11,12 +11,6 @@ if [ ! -f .env ]; then
     cp .env.example .env
     echo "✅ .env file created"
     echo ""
-    echo "⚠️  IMPORTANT: Please update the DATABASE_URL in .env file before continuing"
-    echo "   You can get a free PostgreSQL database from:"
-    echo "   - Supabase: https://supabase.com"
-    echo "   - Railway: https://railway.app"
-    echo "   - Render: https://render.com"
-    echo ""
     exit 1
 fi
 
