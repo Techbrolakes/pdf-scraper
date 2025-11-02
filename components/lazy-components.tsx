@@ -7,7 +7,7 @@ import { Skeleton, SkeletonCard } from './ui/skeleton'
 
 // Lazy load the resume detail modal (only when needed)
 export const LazyResumeDetailModal = dynamic(
-  () => import('./resume-detail-modal').then((mod) => ({ default: mod.ResumeDetailModal })),
+  () => import('./resume/detail').then((mod) => ({ default: mod.ResumeDetailModal })),
   {
     loading: () => (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

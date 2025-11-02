@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/types/resume";
+import { ensureProtocol } from "@/lib/utils";
 
 /**
  * Download resume data as JSON
@@ -293,8 +294,6 @@ export function downloadAsTXT(resumeData: ResumeData, fileName: string) {
   const link = document.createElement("a");
   link.href = url;
   link.download = `${fileName.replace(".pdf", "")}_data.txt`;
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
 /**
@@ -416,8 +415,8 @@ function generatePDFHTML(resumeData: ResumeData, fileName: string): string {
   <div class="profile-grid">
     ${resumeData.profile.email ? `<div class="profile-item"><strong>Email</strong>${resumeData.profile.email}</div>` : ""}
     ${resumeData.profile.city || resumeData.profile.country ? `<div class="profile-item"><strong>Location</strong>${resumeData.profile.city || ""}, ${resumeData.profile.country || ""}</div>` : ""}
-    ${resumeData.profile.linkedIn ? `<div class="profile-item"><strong>LinkedIn</strong><a href="${resumeData.profile.linkedIn}">${resumeData.profile.linkedIn}</a></div>` : ""}
-    ${resumeData.profile.website ? `<div class="profile-item"><strong>Website</strong><a href="${resumeData.profile.website}">${resumeData.profile.website}</a></div>` : ""}
+    ${resumeData.profile.linkedIn ? `<div class="profile-item"><strong>LinkedIn</strong><a href="${ensureProtocol(resumeData.profile.linkedIn)}">${resumeData.profile.linkedIn}</a></div>` : ""}
+    ${resumeData.profile.website ? `<div class="profile-item"><strong>Website</strong><a href="${ensureProtocol(resumeData.profile.website)}">${resumeData.profile.website}</a></div>` : ""}
     <div class="profile-item"><strong>Remote Work</strong>${resumeData.profile.remote ? "Yes" : "No"}</div>
     <div class="profile-item"><strong>Open to Relocation</strong>${resumeData.profile.relocation ? "Yes" : "No"}</div>
   </div>
@@ -499,7 +498,7 @@ function generatePDFHTML(resumeData: ResumeData, fileName: string): string {
       <div class="other-item">
         <h3>${pub.title}</h3>
         <p class="date">${pub.publisher} | ${pub.publicationDate}</p>
-        ${pub.publicationUrl ? `<p><a href="${pub.publicationUrl}">${pub.publicationUrl}</a></p>` : ""}
+        ${pub.publicationUrl ? `<p><a href="${ensureProtocol(pub.publicationUrl)}">${pub.publicationUrl}</a></p>` : ""}
         ${pub.description ? `<p class="description">${pub.description}</p>` : ""}
       </div>
     `).join("")}

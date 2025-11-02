@@ -43,7 +43,7 @@ export function TestCardModal() {
           <div className="flex min-h-screen items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" />
             <div
-              className="relative bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl p-6 max-w-2xl w-full"
+              className="relative bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl p-6 max-w-xl w-full"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -63,16 +63,16 @@ export function TestCardModal() {
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors shrink-0"
                 >
-                  <CloseIcon className="w-5 h-5 text-gray-400 hover:text-white" />
+                  <CloseIcon className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer" />
                 </button>
               </div>
 
               {/* Test Cards */}
-              <div className="space-y-4">
+              <div className="space-y-4 mb-4">
                 {/* Successful Payment Card */}
-                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
                       <CheckIcon className="w-4 h-4 text-green-400" />
@@ -96,11 +96,11 @@ export function TestCardModal() {
                           onClick={() =>
                             copyToClipboard("4242424242424242", "success-card")
                           }
-                          className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors group cursor-pointer"
                           title="Copy card number"
                         >
                           {copiedField === "success-card" ? (
-                            <CheckIcon className="w-5 h-5 text-green-400" />
+                            <CheckIcon className="w-5 h-5 text-green-400 " />
                           ) : (
                             <CopyIcon className="w-5 h-5 text-gray-400 group-hover:text-white" />
                           )}
@@ -131,73 +131,6 @@ export function TestCardModal() {
                           ZIP
                         </label>
                         <code className="block px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-green-300 font-mono text-sm">
-                          12345
-                        </code>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Declined Payment Card */}
-                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-                      <CloseIcon className="w-4 h-4 text-red-400" />
-                    </div>
-                    <span className="text-base font-semibold text-white">
-                      Test Declined Payment
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Card Number */}
-                    <div>
-                      <label className="text-xs text-gray-400 mb-1.5 block">
-                        Card Number
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-red-300 font-mono text-sm">
-                          4000 0000 0000 0002
-                        </code>
-                        <button
-                          onClick={() =>
-                            copyToClipboard("4000000000000002", "declined-card")
-                          }
-                          className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
-                          title="Copy card number"
-                        >
-                          {copiedField === "declined-card" ? (
-                            <CheckIcon className="w-5 h-5 text-green-400" />
-                          ) : (
-                            <CopyIcon className="w-5 h-5 text-gray-400 group-hover:text-white" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Other Details */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs text-gray-400 mb-1.5 block">
-                          Expiry
-                        </label>
-                        <code className="block px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-red-300 font-mono text-sm">
-                          12/34
-                        </code>
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-400 mb-1.5 block">
-                          CVC
-                        </label>
-                        <code className="block px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-red-300 font-mono text-sm">
-                          123
-                        </code>
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-400 mb-1.5 block">
-                          ZIP
-                        </label>
-                        <code className="block px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-red-300 font-mono text-sm">
                           12345
                         </code>
                       </div>

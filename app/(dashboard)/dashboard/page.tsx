@@ -1,13 +1,12 @@
-import { auth } from "@/lib/auth";
 import { deleteResume } from "@/app/actions/resume-actions";
-import { ResumeHistory } from "@/components/resume-history";
+import { getDashboardData } from "@/app/actions/dashboard-actions";
+import { ResumeHistory } from "@/components/resume/history";
 import { PDFUpload } from "@/components/pdf-upload";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { CreditAlerts } from "@/components/dashboard/credit-alerts";
 import { ProductTour } from "@/components/product-tour";
 import { revalidatePath } from "next/cache";
 import type { ResumeData } from "@/types/resume";
-import { prisma } from "@/lib/prisma";
 
 async function refreshDashboard() {
   "use server";
@@ -15,41 +14,8 @@ async function refreshDashboard() {
 }
 
 export default async function DashboardPage() {
-  const session = await auth();
-
-  const [resumeCount, allResumes, recentResume, user] = await Promise.all([
-    prisma.resumeHistory.count({
-      where: {
-        userId: session?.user?.id,
-      },
-    }),
-    prisma.resumeHistory.findMany({
-      where: {
-        userId: session?.user?.id,
-      },
-      orderBy: {
-        uploadedAt: "desc",
-      },
-    }),
-    prisma.resumeHistory.findFirst({
-      where: {
-        userId: session?.user?.id,
-      },
-      orderBy: {
-        uploadedAt: "desc",
-      },
-    }),
-    prisma.user.findUnique({
-      where: {
-        id: session?.user?.id,
-      },
-      select: {
-        credits: true,
-        planType: true,
-        hasCompletedTour: true,
-      },
-    }),
-  ]);
+  // Fetch all dashboard data using server action
+  const { resumeCount, allResumes, recentResume, user } = await getDashboardData();
 
   const credits = user?.credits || 0;
   const planType = user?.planType || "FREE";
