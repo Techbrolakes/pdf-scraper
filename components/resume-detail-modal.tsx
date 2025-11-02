@@ -55,17 +55,19 @@ export function ResumeDetailModal({
     if (isOpen) {
       // Save current scroll position
       const scrollY = window.scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      
+      // Calculate scrollbar width to prevent layout shift
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      
       document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
 
       return () => {
-        // Restore scroll position
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        document.body.style.overflow = "";
+        // Restore scroll position and styles
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
         window.scrollTo(0, scrollY);
       };
     }
@@ -252,7 +254,15 @@ export function ResumeDetailModal({
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 sm:py-6">
+          <div 
+            data-lenis-prevent
+            className="flex-1 overflow-y-scroll overscroll-contain px-4 sm:px-6 py-4 sm:py-6" 
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              minHeight: 0,
+              maxHeight: '100%'
+            }}
+          >
             {activeTab === "profile" && (
               <ProfileSection
                 profile={resumeData.profile}
@@ -301,7 +311,7 @@ function ProfileSection({
           label="Location"
           value={`${profile.city || ""}, ${profile.country || ""}`}
         />
-        <InfoField label="LinkedIn" value={profile.linkedIn} link />
+        <InfoField label="LinkedIn" value={profile.linkedIn} />
         <InfoField label="Website" value={profile.website} link />
         <InfoField label="Remote Work" value={profile.remote ? "Yes" : "No"} />
         <InfoField
