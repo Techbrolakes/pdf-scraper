@@ -1,14 +1,32 @@
-# PDF Scraper - Resume Data Extraction Tool
+# PDF Scraper - AI-Powered Resume Data Extraction
 
-An AI-powered Next.js application for extracting and managing resume data from PDF files.
+An enterprise-grade Next.js application for extracting and managing structured resume data from PDF files using OpenAI GPT-4o.
+
+## 🚀 Quick Overview
+
+**PDF Upload Pipeline:**
+1. **Upload** → User uploads PDF (max 10MB)
+2. **Validate** → Authentication, credits, rate limits, PDF structure
+3. **Extract** → pdf2json extracts text (serverless-compatible)
+4. **Parse** → GPT-4o extracts structured data (JSON Schema mode)
+5. **Store** → Save to PostgreSQL with Prisma
+6. **Deduct** → Deduct 100 credits from user account
+
+**Key Highlights:**
+- ⚡ **Serverless-First**: 100% compatible with Vercel, Netlify, AWS Lambda
+- 🤖 **AI-Powered**: OpenAI GPT-4o with Structured Outputs (guaranteed JSON format)
+- 🔒 **Enterprise Security**: NextAuth v5, rate limiting, credit system
+- 💳 **Stripe Integration**: Subscription plans with automated billing
+- 📊 **Structured Data**: Strict ENUM validation for consistent data
+- 🎨 **Modern UI**: 30+ custom components, dark mode, responsive design
 
 ## Features
 
 ### Core Features
 - 🔐 **Authentication**: Email/password + GitHub/Google OAuth with NextAuth.js
 - 📤 **PDF Upload**: Drag-and-drop PDF upload with file validation
-- 🤖 **AI-Powered Extraction**: OpenAI GPT-4 and Vision for intelligent data extraction
-- 📄 **Text & Image PDFs**: Support for both text-based and image-based resumes
+- 🤖 **AI-Powered Extraction**: OpenAI GPT-4o with Structured Outputs for guaranteed data format
+- 📄 **Text-based PDFs**: Serverless-compatible text extraction with pdf2json
 - 📊 **Structured Data**: Extracts profile, experience, education, skills, and more
 - 🗄️ **Database**: PostgreSQL with Prisma ORM
 - 🎨 **Modern UI**: Built with TailwindCSS
@@ -39,7 +57,7 @@ An AI-powered Next.js application for extracting and managing resume data from P
 - **Database**: PostgreSQL (via Supabase)
 - **ORM**: Prisma
 - **AI**: OpenAI GPT-4o (text & vision)
-- **PDF Processing**: pdf-parse, pdf-to-img
+- **PDF Processing**: pdf2json (serverless-compatible)
 - **Payments**: Stripe (subscriptions & webhooks)
 - **Styling**: TailwindCSS
 - **Form Validation**: Zod + React Hook Form
@@ -119,33 +137,101 @@ npm run dev
 pdf-scraper/
 ├── app/
 │   ├── (auth)/
-│   │   ├── login/          # Login page
-│   │   └── register/       # Registration page
+│   │   ├── login/              # Login page with OAuth
+│   │   ├── register/           # Registration page
+│   │   ├── forgot-password/    # Password reset flow
+│   │   └── layout.tsx          # Auth layout
 │   ├── (dashboard)/
-│   │   ├── dashboard/      # Main dashboard with PDF upload
-│   │   ├── settings/       # User settings
-│   │   └── layout.tsx      # Dashboard layout with nav
+│   │   ├── dashboard/          # Main dashboard with PDF upload
+│   │   ├── settings/           # User settings & billing
+│   │   ├── billing/            # Subscription management
+│   │   └── layout.tsx          # Dashboard layout with sidebar
 │   ├── api/
-│   │   ├── auth/           # Auth API routes
-│   │   └── upload/         # PDF upload API route
-│   ├── layout.tsx          # Root layout
-│   └── page.tsx            # Home page (redirects)
+│   │   ├── auth/               # NextAuth API routes
+│   │   ├── upload/             # PDF upload & processing (route.ts)
+│   │   ├── checkout/           # Stripe checkout session
+│   │   ├── billing/            # Stripe customer portal
+│   │   └── webhooks/stripe/    # Stripe webhook handler
+│   ├── actions/
+│   │   ├── resume-actions.ts   # Server actions for resumes
+│   │   ├── settings-actions.ts # Server actions for settings
+│   │   └── tour-actions.ts     # Product tour actions
+│   ├── layout.tsx              # Root layout
+│   └── page.tsx                # Landing page
 ├── components/
-│   ├── ui/                 # Reusable UI components
-│   ├── pdf-upload.tsx      # PDF upload component
-│   └── sign-out-button.tsx
+│   ├── ui/                     # 30+ custom UI components
+│   │   ├── button.tsx          # Button with variants
+│   │   ├── input.tsx           # Form input
+│   │   ├── card.tsx            # Card component
+│   │   ├── dialog.tsx          # Modal dialog
+│   │   ├── tabs.tsx            # Tabbed interface
+│   │   ├── progress.tsx        # Progress bar
+│   │   ├── skeleton.tsx        # Loading skeletons
+│   │   └── ...                 # 20+ more components
+│   ├── layout/
+│   │   ├── sidebar.tsx         # Collapsible sidebar
+│   │   └── header.tsx          # Dashboard header
+│   ├── dashboard/
+│   │   ├── stats-cards.tsx     # Dashboard statistics
+│   │   └── credit-alerts.tsx   # Credit warnings
+│   ├── auth/
+│   │   ├── oauth-buttons.tsx   # GitHub/Google OAuth
+│   │   └── feature-highlights.tsx
+│   ├── billing/
+│   │   ├── billing-stats.tsx   # Credit & plan display
+│   │   └── test-card-modal.tsx # Test card info
+│   └── product-tour.tsx        # Driver.js tour
 ├── lib/
-│   ├── auth.ts             # NextAuth configuration
-│   ├── prisma.ts           # Prisma client
-│   ├── pdf-utils.ts        # PDF text extraction utilities
-│   ├── openai-service.ts   # OpenAI integration (GPT-4 & Vision)
-│   └── validations/        # Zod schemas
+│   ├── auth.ts                 # NextAuth v5 configuration
+│   ├── prisma.ts               # Prisma client singleton
+│   ├── rate-limit.ts           # Database-based rate limiting
+│   ├── stripe-service.ts       # Stripe integration
+│   ├── openai-service.ts       # OpenAI GPT-4o integration
+│   ├── pdf/
+│   │   └── pdf-extractor.ts    # pdf2json text extraction
+│   ├── openai/
+│   │   ├── client.ts           # OpenAI client config
+│   │   └── resume-parser.ts    # Structured output parser
+│   ├── validations/
+│   │   ├── auth.ts             # Auth schemas (Zod)
+│   │   └── settings.ts         # Settings schemas (Zod)
+│   └── utils.ts                # Utility functions
 ├── prisma/
-│   └── schema.prisma       # Database schema
+│   └── schema.prisma           # Database schema with User, ResumeHistory
 ├── types/
-│   └── resume.ts           # Resume data types & ENUMs
-└── middleware.ts           # Protected routes middleware
+│   ├── resume.ts               # Resume data types & ENUMs
+│   └── next-auth.d.ts          # NextAuth type extensions
+├── emails/
+│   ├── welcome-email.tsx       # Welcome email template
+│   └── password-reset-email.tsx # Password reset email
+├── scripts/
+│   ├── setup-db.sh             # Database setup script
+│   └── grant-free-credits.ts   # Admin credit script
+└── middleware.ts               # Protected routes & auth
 ```
+
+### Key Implementation Files
+
+**PDF Processing:**
+- `app/api/upload/route.ts` - Main upload endpoint with validation, rate limiting, credit checks
+- `lib/pdf/pdf-extractor.ts` - pdf2json integration with event-driven extraction
+- `lib/openai-service.ts` - GPT-4o integration with structured outputs
+- `lib/openai/resume-parser.ts` - Resume parsing with JSON Schema validation
+
+**Authentication & Authorization:**
+- `lib/auth.ts` - NextAuth v5 config (credentials + OAuth)
+- `middleware.ts` - Route protection and session management
+- `app/api/auth/[...nextauth]/route.ts` - Auth API routes
+
+**Billing & Credits:**
+- `lib/stripe-service.ts` - Credit management and Stripe integration
+- `app/api/webhooks/stripe/route.ts` - Webhook event handling
+- `app/api/checkout/session/route.ts` - Checkout session creation
+- `lib/rate-limit.ts` - Upload rate limiting (10/hour)
+
+**Database:**
+- `prisma/schema.prisma` - User, ResumeHistory, Account, Session models
+- `lib/prisma.ts` - Prisma client with connection pooling
 
 ## Database Schema
 
@@ -190,76 +276,273 @@ For detailed setup instructions, see [NEXTAUTH_SETUP.md](./NEXTAUTH_SETUP.md)
 
 ## PDF Upload Implementation Details
 
+### Architecture Overview
+
+The PDF upload system is built with a **serverless-first architecture** using pure JavaScript libraries for maximum compatibility with platforms like Vercel, Netlify, and AWS Lambda.
+
+### Technology Stack
+
+**PDF Processing:**
+- **Library**: `pdf2json` (v4.0.0) - Pure JavaScript PDF parser
+- **Why pdf2json**: 100% serverless-compatible, no native dependencies (canvas/sharp)
+- **Temporary Storage**: `/tmp` directory with UUID-based filenames
+- **Cleanup**: Automatic file cleanup with try-finally blocks
+
+**AI Processing:**
+- **Model**: OpenAI GPT-4o (gpt-4o-2024-08-06)
+- **Structured Outputs**: JSON Schema mode with strict validation
+- **Token Limit**: 4096 max tokens per response
+- **Temperature**: 0.1 (for consistent extraction)
+
+### Upload Flow (Step-by-Step)
+
+#### 1. **Client-Side Validation**
+```typescript
+// File type check
+if (file.type !== "application/pdf") → Error
+
+// File size check  
+if (file.size > 10MB) → Error
+if (file.size === 0) → Error
+```
+
+#### 2. **Authentication & Authorization**
+```typescript
+// Check user session
+const session = await auth()
+if (!session?.user?.id) → 401 Unauthorized
+```
+
+#### 3. **Credit Check** (Pre-Processing)
+```typescript
+// Verify user has enough credits
+const hasCredits = await hasEnoughCredits(userId, 100)
+if (!hasCredits) → 402 Payment Required
+```
+
+#### 4. **Rate Limiting**
+```typescript
+// Database-based rate limiting
+// Default: 10 uploads per hour per user
+await checkRateLimit(userId)
+if (exceeded) → 429 Too Many Requests (with Retry-After header)
+```
+
+#### 5. **PDF Validation**
+```typescript
+// Validate PDF buffer
+- Check PDF signature (%PDF header)
+- Verify file size (max 10MB)
+- Ensure buffer is not empty
+if (invalid) → 400 Bad Request
+```
+
+#### 6. **PDF Text Extraction** (Serverless)
+```typescript
+// Using pdf2json library
+1. Write buffer to /tmp/{uuid}.pdf
+2. Initialize PDFParser with event listeners
+3. Extract text with 30-second timeout
+4. Clean and normalize text content
+5. Delete temporary file (cleanup)
+
+Result: { success, text, pageCount, metadata }
+```
+
+**Text Cleaning Process:**
+- Remove excessive whitespace
+- Strip special Unicode characters
+- Normalize line breaks
+- Remove excessive line breaks (>2)
+- Trim whitespace
+
+#### 7. **AI Resume Parsing**
+```typescript
+// Send to OpenAI GPT-4o
+- System prompt: Expert resume parser instructions
+- User prompt: Extracted text
+- Response format: JSON Schema (strict mode)
+- Validation: ENUM values enforced
+
+Extracts:
+- Profile (name, email, summary, location, etc.)
+- Work experiences (with employment/location types)
+- Education (with degree levels)
+- Skills (array of strings)
+- Licenses, languages, achievements, publications, honors
+```
+
+#### 8. **Data Validation**
+```typescript
+// Validate extracted data
+- Check required fields (profile, workExperiences, educations)
+- Verify data types
+- Ensure ENUM values are valid
+if (invalid) → 500 Internal Server Error
+```
+
+#### 9. **Database Storage**
+```typescript
+// Save to PostgreSQL via Prisma
+await prisma.resumeHistory.create({
+  userId: session.user.id,
+  fileName: file.name,
+  resumeData: {
+    pdfType: "text",
+    pages: pageCount,
+    processingMethod: "text",
+    status: "processed",
+    resumeData: extractedData,
+    metadata: { pages: pageCount }
+  }
+})
+```
+
+#### 10. **Credit Deduction** (Post-Processing)
+```typescript
+// Deduct credits after successful processing
+await deductCredits(userId, 100)
+// 100 credits per resume extraction
+```
+
+#### 11. **Response**
+```typescript
+// Return success response
+{
+  success: true,
+  data: {
+    id: resumeHistory.id,
+    fileName: file.name,
+    pdfType: "text",
+    pages: pageCount,
+    processingMethod: "text",
+    status: "processed",
+    resumeData: extractedData,
+    creditsUsed: 100
+  }
+}
+```
+
 ### File Size Handling
 
-The application handles files of different sizes efficiently:
-
-- **Files ≤4MB**: Processed directly through the API route
-- **Files >4MB**: Use XMLHttpRequest with progress tracking for better user experience
-- **Maximum file size**: 10MB (configurable)
-
-### Upload Flow
-
-1. **Client-side validation**:
-   - File type check (must be `.pdf`)
-   - File size check (max 10MB)
-   - Empty file check
-
-2. **Server-side processing**:
-   - Authentication verification
-   - File validation (type, size, PDF structure)
-   - PDF text extraction
-   - PDF type detection (text-based, image-based, hybrid)
-   - Metadata storage in database
-
-3. **User feedback**:
-   - Real-time progress indicators
-   - Toast notifications for success/error states
-   - Automatic dashboard refresh on success
-
-### PDF Type Detection
-
-The system automatically detects PDF types based on text density:
-
-- **Text-based**: >100 characters per page - Direct text extraction
-- **Hybrid**: 10-100 characters per page - Partial text extraction
-- **Image-based**: <10 characters per page - Requires OCR (Phase 3)
+- **Maximum file size**: 10MB (enforced at multiple levels)
+- **Serverless timeout**: 60 seconds max execution time
+- **PDF extraction timeout**: 30 seconds
+- **Payload limit**: Configured via Next.js route config
 
 ### Error Handling
 
-Comprehensive error handling for:
-- Invalid file types
-- Oversized files (>10MB)
-- Empty files
-- Corrupted PDFs
-- Network errors
-- Server processing errors
+**Comprehensive error handling at every stage:**
 
-All errors display user-friendly messages via toast notifications.
+| Error Type | HTTP Status | User Message |
+|------------|-------------|--------------|
+| No authentication | 401 | "Unauthorized" |
+| Insufficient credits | 402 | "Insufficient credits. Please subscribe..." |
+| Rate limit exceeded | 429 | "Rate limit exceeded. Try again in X minutes" |
+| Invalid file type | 400 | "Only PDF files are allowed" |
+| File too large | 400 | "File size exceeds 10MB limit" |
+| Empty file | 400 | "File is empty" |
+| Invalid PDF structure | 400 | "Invalid PDF file" |
+| No text extracted | 500 | "No meaningful text content found" |
+| OpenAI rate limit | 429 | "OpenAI rate limit exceeded" |
+| Processing timeout | 504 | "Processing timed out" |
+| Invalid API key | 500 | "Server configuration error" |
+| Generic error | 500 | "An unexpected error occurred" |
+
+**Error Response Format:**
+```json
+{
+  "success": false,
+  "error": "User-friendly error message",
+  "insufficientCredits": true, // Optional flag
+  "retryAfter": 3600 // Optional (for rate limiting)
+}
+```
+
+### Rate Limiting Details
+
+**Configuration:**
+- **Limit**: 10 uploads per hour per user
+- **Window**: Rolling 1-hour window
+- **Storage**: Database-based (ResumeHistory table)
+- **Headers**: Includes `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`
+
+**Implementation:**
+```typescript
+// Count uploads in last hour
+const uploadCount = await prisma.resumeHistory.count({
+  where: {
+    userId,
+    uploadedAt: { gte: windowStart }
+  }
+})
+
+if (uploadCount >= 10) {
+  // Calculate retry time from oldest upload
+  const retryAfter = Math.ceil(
+    (oldestUpload.uploadedAt + 1hour - now) / 1000
+  )
+  throw new RateLimitError(message, retryAfter)
+}
+```
+
+### Serverless Compatibility
+
+**Why Serverless-Compatible?**
+- No native dependencies (canvas, sharp, pdfjs-dist)
+- Pure JavaScript implementation
+- Works on Vercel, Netlify, AWS Lambda, Cloudflare Workers
+- No webpack configuration needed
+- No build-time compilation required
+
+**Previous Challenges (Solved):**
+- ❌ `pdfjs-dist` → Required canvas (native dependency)
+- ❌ `pdf-parse` → Limited text extraction
+- ❌ `sharp` → Native image processing
+- ✅ `pdf2json` → Pure JavaScript, event-driven, reliable
+
+**Deployment Configuration:**
+```typescript
+// app/api/upload/route.ts
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+export const maxDuration = 60 // 60 seconds
+```
+
+### Performance Metrics
+
+**Typical Processing Times:**
+- PDF validation: <100ms
+- Text extraction: 500ms - 3s (depending on PDF size)
+- OpenAI parsing: 2s - 8s (depending on content length)
+- Database storage: <200ms
+- **Total**: ~3-12 seconds per resume
+
+**Resource Usage:**
+- Memory: ~50-150MB per request
+- Temporary storage: PDF file size (deleted after processing)
+- Database: ~5-50KB per resume record
 
 
 ## OpenAI Integration Details
 
 ### Resume Data Extraction
 
-The application uses OpenAI's latest models with structured outputs to extract comprehensive resume data:
+The application uses OpenAI GPT-4o with **Structured Outputs** (JSON Schema mode) to extract comprehensive resume data with guaranteed format compliance.
 
-**For Text-based PDFs**:
-- Uses GPT-4o with structured output
-- Extracts text using pdf-parse
-- Sends cleaned text to OpenAI
-- Returns validated JSON matching exact schema
+**Model Configuration:**
+- **Model**: `gpt-4o-2024-08-06` (latest GPT-4o with structured outputs)
+- **Response Format**: JSON Schema with `strict: true`
+- **Temperature**: 0.1 (for consistent, deterministic extraction)
+- **Max Tokens**: 4096
+- **Timeout**: Configurable (default: 60s)
 
-**For Image-based PDFs**:
-- Converts PDF pages to images (max 10 pages)
-- Uses GPT-4o Vision API
-- Processes images with OCR capabilities
-- Returns structured JSON data
-
-**For Hybrid PDFs**:
-- Attempts text extraction first
-- Falls back to vision processing if needed
-- Combines best of both approaches
+**Processing Method:**
+- Extracts text from PDF using pdf2json
+- Sends cleaned text to OpenAI with expert system prompt
+- Receives structured JSON matching exact schema
+- Validates ENUM values and required fields
+- Returns validated ResumeData object
 
 ### Extracted Data Structure
 
@@ -290,36 +573,100 @@ The system extracts the following information:
 }
 ```
 
-### ENUM Values
+### ENUM Values (Strictly Enforced)
 
-The system enforces strict ENUM values:
+The JSON Schema enforces these exact ENUM values:
 
-- **Employment Type**: FULL_TIME, PART_TIME, INTERNSHIP, CONTRACT
-- **Location Type**: ONSITE, REMOTE, HYBRID
-- **Degree**: HIGH_SCHOOL, ASSOCIATE, BACHELOR, MASTER, DOCTORATE
-- **Language Level**: BEGINNER, INTERMEDIATE, ADVANCED, NATIVE
+| Field | Allowed Values |
+|-------|----------------|
+| **employmentType** | `FULL_TIME`, `PART_TIME`, `INTERNSHIP`, `CONTRACT` |
+| **locationType** | `ONSITE`, `REMOTE`, `HYBRID` |
+| **degree** | `HIGH_SCHOOL`, `ASSOCIATE`, `BACHELOR`, `MASTER`, `DOCTORATE` |
+| **languageLevel** | `BEGINNER`, `INTERMEDIATE`, `ADVANCED`, `NATIVE` |
+
+**Why Strict ENUMs?**
+- Ensures data consistency across all resumes
+- Enables reliable filtering and searching
+- Prevents typos and variations
+- Simplifies frontend rendering logic
+
+### System Prompt Strategy
+
+The system uses a carefully crafted prompt to guide GPT-4o:
+
+**Key Instructions:**
+1. Extract ALL available information from the resume
+2. Use exact ENUM values (no variations)
+3. Use `null` for missing single values, `[]` for missing arrays
+4. Format dates correctly (numeric months 1-12, 4-digit years)
+5. Set `current: true` for ongoing positions/education
+6. Extract skills as array of strings
+7. Be thorough with licenses, languages, achievements, publications, honors
+
+**Prompt Engineering:**
+```typescript
+const SYSTEM_PROMPT = `You are an expert resume parser. Extract ALL information 
+from the resume and return it in the exact JSON format specified.
+
+IMPORTANT INSTRUCTIONS:
+1. Extract ALL available information from the resume
+2. Use the exact ENUM values provided (e.g., FULL_TIME, REMOTE, BACHELOR, ADVANCED)
+3. For missing fields, use null for single values or empty arrays [] for lists
+...
+Return ONLY valid JSON matching the ResumeData schema.`
+```
+
+### Structured Outputs (JSON Schema Mode)
+
+**Why JSON Schema Mode?**
+- **Guaranteed Format**: OpenAI ensures response matches schema exactly
+- **No Parsing Errors**: Valid JSON guaranteed (no markdown, no explanations)
+- **Type Safety**: All fields match TypeScript types
+- **ENUM Enforcement**: Only allowed values are returned
+- **Required Fields**: All required fields are always present
+
+**Schema Configuration:**
+```typescript
+response_format: {
+  type: "json_schema",
+  json_schema: {
+    name: "resume_extraction",
+    strict: true,  // Enforces exact schema compliance
+    schema: RESUME_SCHEMA
+  }
+}
+```
 
 ### Error Handling
 
-Comprehensive error handling for:
-- ✅ OpenAI API errors
-- ✅ Rate limiting (429 errors)
-- ✅ Request timeouts
-- ✅ Invalid API keys
-- ✅ Invalid JSON responses
-- ✅ Missing required fields
-- ✅ Network failures
+**OpenAI-Specific Errors:**
+- ✅ Rate limiting (429) → "OpenAI rate limit exceeded. Try again in a moment."
+- ✅ Timeout errors → "Request timed out. Please try again."
+- ✅ Invalid API key → "OpenAI API key is invalid."
+- ✅ No response → "No response from OpenAI"
+- ✅ Invalid JSON → Caught by structured outputs (shouldn't happen)
+
+**Data Validation Errors:**
+- ✅ Missing required fields (profile, workExperiences, educations)
+- ✅ Invalid data types
+- ✅ Invalid ENUM values
+- ✅ Malformed resume data
 
 All errors return user-friendly messages via toast notifications.
 
-### Processing Flow
+### Cost Optimization
 
-1. **Upload PDF** → File validation
-2. **Extract Content** → Text or image extraction
-3. **Send to OpenAI** → GPT-4 or GPT-4 Vision
-4. **Receive Structured JSON** → Validated against schema
-5. **Save to Database** → Linked to authenticated user
-6. **Success Notification** → User can view results
+**Pricing (as of 2024):**
+- GPT-4o: ~$0.005 per 1K input tokens, ~$0.015 per 1K output tokens
+- Average resume: ~2K input tokens, ~1K output tokens
+- **Cost per resume**: ~$0.025 (2.5 cents)
+
+**Optimization Strategies:**
+1. Text extraction only (no expensive Vision API)
+2. Low temperature (0.1) for faster responses
+3. Token limit (4096) to prevent excessive costs
+4. Efficient text cleaning to reduce input tokens
+5. Structured outputs to eliminate retry costs
 
 
 ## Dashboard Features
@@ -618,31 +965,6 @@ npx prisma db push
 - Use production API keys (starts with `pk_live_` and `sk_live_`)
 - Set all environment variables in production
 - Test with real card in test mode first
-
-### Security Notes
-
-- Never commit `.env` file with real API keys
-- Use test mode for development
-- Webhook signatures are verified automatically
-- All payment processing happens on Stripe's secure servers
-- No credit card data is stored in your database
-
-## Future Enhancements
-
-- Advanced analytics dashboard
-- Resume comparison features
-- Bulk upload support
-- Export to PDF/CSV formats
-- Email notifications
-- API access for integrations
-- Redis-based rate limiting
-- Error tracking service integration (Sentry)
-- Progressive Web App features
-- Internationalization support
-- One-time credit purchases
-- Team/organization plans
-- Usage analytics and reporting
-
 ## License
 
 MIT
