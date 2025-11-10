@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { extractTextFromPDF, validatePDFBuffer } from "@/lib/pdf/pdf-extractor";
 import {
   extractResumeFromText,
   extractResumeFromImages,
@@ -61,7 +60,7 @@ export async function POST(request: NextRequest) {
             status: 429,
             headers: {
               "Retry-After": error.retryAfter.toString(),
-              "X-RateLimit-Limit": "10",
+              "X-RateLimit-Limit": "40",
               "X-RateLimit-Remaining": "0",
             },
           }
@@ -72,7 +71,8 @@ export async function POST(request: NextRequest) {
 
     // Parse form data
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    const fileName = formData.get("fileName") as string | null;
+    const fileSize = formData.get("fileSize") as string | null;
     
     // Get pre-processed data from client-side
     const processedImages = formData.get("processedImages") as string | null;
@@ -80,15 +80,15 @@ export async function POST(request: NextRequest) {
     const pdfType = formData.get("pdfType") as string | null;
     const pageCount = formData.get("pageCount") as string | null;
 
-    if (!file) {
+    if (!fileName) {
       return NextResponse.json(
-        { success: false, error: "No file provided" },
+        { success: false, error: "No file name provided" },
         { status: 400 }
       );
     }
 
-    // Validate file type
-    if (file.type !== "application/pdf") {
+    // Validate file type from name
+    if (!fileName.toLowerCase().endsWith(".pdf")) {
       return NextResponse.json(
         {
           success: false,
@@ -99,7 +99,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    const fileSizeNum = parseInt(fileSize || "0");
+    if (fileSizeNum > MAX_FILE_SIZE) {
       return NextResponse.json(
         {
           success: false,
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (file.size === 0) {
+    if (fileSizeNum === 0) {
       return NextResponse.json(
         { success: false, error: "File is empty." },
         { status: 400 }
@@ -155,51 +156,15 @@ export async function POST(request: NextRequest) {
         console.log(`[Upload] Received ${extractedText.length} chars of pre-extracted text from client`);
       }
     } else {
-      // Fallback to server-side processing (for backwards compatibility)
-      console.log("[Upload] No client-side data, falling back to server-side extraction");
-      
-      // Convert file to buffer
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      // Validate PDF buffer
-      const validation = validatePDFBuffer(buffer);
-      if (!validation.valid) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: validation.error || "Invalid PDF file",
-          },
-          { status: 400 }
-        );
-      }
-
-      // Extract text from PDF using serverless-compatible processor
-      const extractionStartTime = Date.now();
-      const serverResult = await extractTextFromPDF(buffer);
-      const extractionDuration = Date.now() - extractionStartTime;
-      console.log(`[Upload] Server-side PDF extraction completed in ${extractionDuration}ms`);
-
-      if (!serverResult.success) {
-        console.error(`[Upload] PDF extraction failed: ${serverResult.error}`);
-        return NextResponse.json(
-          {
-            success: false,
-            error: serverResult.error || "Failed to extract text from PDF.",
-          },
-          { status: 500 }
-        );
-      }
-      
-      // Convert server result to ExtractionResult format
-      extractionResult = {
-        success: serverResult.success,
-        text: serverResult.text,
-        pageCount: serverResult.pageCount || 1,
-        pdfType: "text",
-        processingMethod: "text" as const,
-        metadata: serverResult.metadata,
-      }
+      // No client-side processing - this should not happen with current implementation
+      console.error("[Upload] No client-side data provided. Client-side processing is required.");
+      return NextResponse.json(
+        {
+          success: false,
+          error: "PDF processing failed. Please try again.",
+        },
+        { status: 400 }
+      );
     }
 
     // Ensure we have extraction result
@@ -284,7 +249,7 @@ export async function POST(request: NextRequest) {
     const resumeHistory = await prisma.resumeHistory.create({
       data: {
         userId,
-        fileName: file.name,
+        fileName,
         resumeData: JSON.parse(JSON.stringify(processedData)),
       },
     });
@@ -302,7 +267,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         id: resumeHistory.id,
-        fileName: file.name,
+        fileName,
         pdfType: processedData.pdfType,
         pages: extractionResult.pageCount || 0,
         processingMethod,

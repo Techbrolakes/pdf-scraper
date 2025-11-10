@@ -135,7 +135,9 @@ export function PDFUpload({
 
   const uploadSmallFile = async (file: File, pdfData: ClientPDFConversionResult) => {
     const formData = new FormData();
-    formData.append("file", file);
+    // Only send file metadata, not the actual file
+    formData.append("fileName", file.name);
+    formData.append("fileSize", String(file.size));
     
     // Add processed data
     if (pdfData.images) {
@@ -240,7 +242,9 @@ export function PDFUpload({
 
   const uploadLargeFile = async (file: File, pdfData: ClientPDFConversionResult) => {
     const formData = new FormData();
-    formData.append("file", file);
+    // Only send file metadata, not the actual file
+    formData.append("fileName", file.name);
+    formData.append("fileSize", String(file.size));
     
     // Add processed data
     if (pdfData.images) {
