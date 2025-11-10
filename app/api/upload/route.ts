@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { extractTextFromPDF, validatePDFBuffer } from "@/lib/pdf/pdf-extractor";
 import {
   extractResumeFromText,
+  extractResumeFromImages,
   validateResumeData,
 } from "@/lib/openai-service";
 import { checkRateLimit, RateLimitError } from "@/lib/rate-limit";
@@ -26,10 +27,11 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    const userId = session.user.id;
 
     // Check credits before processing
     const hasCredits = await hasEnoughCredits(
-      session.user.id,
+      userId,
       CREDIT_COST_PER_RESUME
     );
     if (!hasCredits) {
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Check rate limit
     try {
-      await checkRateLimit(session.user.id);
+      await checkRateLimit(userId);
     } catch (error) {
       if (error instanceof RateLimitError) {
         return NextResponse.json(
@@ -71,6 +73,12 @@ export async function POST(request: NextRequest) {
     // Parse form data
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    
+    // Get pre-processed data from client-side
+    const processedImages = formData.get("processedImages") as string | null;
+    const extractedText = formData.get("extractedText") as string | null;
+    const pdfType = formData.get("pdfType") as string | null;
+    const pageCount = formData.get("pageCount") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -108,51 +116,134 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    interface ExtractionResult {
+      success: boolean;
+      text?: string;
+      images?: string[];
+      pageCount: number;
+      pdfType?: string;
+      processingMethod: 'text' | 'image';
+      metadata?: unknown;
+      error?: string;
+    }
+    
+    let extractionResult: ExtractionResult | null = null;
+    
+    // Check if we have pre-processed data from client-side
+    if (processedImages || extractedText) {
+      console.log(`[Upload] Using client-side processed data (type: ${pdfType})`);
+      
+      // Use client-side processed data
+      if (processedImages) {
+        const images = JSON.parse(processedImages) as string[];
+        extractionResult = {
+          success: true,
+          images,
+          pageCount: parseInt(pageCount || "1"),
+          pdfType: pdfType || "image",
+          processingMethod: "image" as const,
+        };
+        console.log(`[Upload] Received ${images.length} pre-processed images from client`);
+      } else if (extractedText) {
+        extractionResult = {
+          success: true,
+          text: extractedText,
+          pageCount: parseInt(pageCount || "1"),
+          pdfType: "text",
+          processingMethod: "text" as const,
+        };
+        console.log(`[Upload] Received ${extractedText.length} chars of pre-extracted text from client`);
+      }
+    } else {
+      // Fallback to server-side processing (for backwards compatibility)
+      console.log("[Upload] No client-side data, falling back to server-side extraction");
+      
+      // Convert file to buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-    // Validate PDF buffer
-    const validation = validatePDFBuffer(buffer);
-    if (!validation.valid) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: validation.error || "Invalid PDF file",
-        },
-        { status: 400 }
-      );
+      // Validate PDF buffer
+      const validation = validatePDFBuffer(buffer);
+      if (!validation.valid) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: validation.error || "Invalid PDF file",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Extract text from PDF using serverless-compatible processor
+      const extractionStartTime = Date.now();
+      const serverResult = await extractTextFromPDF(buffer);
+      const extractionDuration = Date.now() - extractionStartTime;
+      console.log(`[Upload] Server-side PDF extraction completed in ${extractionDuration}ms`);
+
+      if (!serverResult.success) {
+        console.error(`[Upload] PDF extraction failed: ${serverResult.error}`);
+        return NextResponse.json(
+          {
+            success: false,
+            error: serverResult.error || "Failed to extract text from PDF.",
+          },
+          { status: 500 }
+        );
+      }
+      
+      // Convert server result to ExtractionResult format
+      extractionResult = {
+        success: serverResult.success,
+        text: serverResult.text,
+        pageCount: serverResult.pageCount || 1,
+        pdfType: "text",
+        processingMethod: "text" as const,
+        metadata: serverResult.metadata,
+      }
     }
 
-    // Extract text from PDF using serverless-compatible processor
-    const extractionStartTime = Date.now();
-    const extractionResult = await extractTextFromPDF(buffer);
-    const extractionDuration = Date.now() - extractionStartTime;
-    console.log(`[Upload] PDF extraction completed in ${extractionDuration}ms`);
-
-    if (!extractionResult.success) {
-      console.error(`[Upload] PDF extraction failed: ${extractionResult.error}`);
+    // Ensure we have extraction result
+    if (!extractionResult) {
       return NextResponse.json(
         {
           success: false,
-          error: extractionResult.error || "Failed to extract text from PDF.",
+          error: "Failed to process PDF. No extraction result available.",
         },
         { status: 500 }
       );
     }
 
-    // Parse resume with OpenAI
+    // Parse resume with OpenAI (text or image-based)
     let resumeData: ResumeData;
-    const processingMethod = "text"; // Always text-based for serverless
+    const processingMethod = extractionResult.processingMethod || "text";
 
     try {
-      if (!extractionResult.text || extractionResult.text.length < 10) {
+      if (extractionResult.processingMethod === "image" && extractionResult.images) {
+        // Image-based PDF - use Vision API
+        console.log(`[Upload] Processing ${extractionResult.images.length} images with GPT-4 Vision`);
+        
+        // Convert base64 images to data URLs
+        const imageUrls = extractionResult.images.map(
+          (base64: string) => `data:image/jpeg;base64,${base64}`
+        );
+        
+        resumeData = await extractResumeFromImages(imageUrls);
+      } else if (extractionResult.text) {
+        // Text-based PDF - use standard GPT-4
+        console.log(`[Upload] Processing text (${extractionResult.text.length} chars) with GPT-4`);
+        
+        if (extractionResult.text.length < 10) {
+          throw new Error(
+            "No meaningful text content found in PDF. Please ensure your PDF is text-searchable."
+          );
+        }
+        
+        resumeData = await extractResumeFromText(extractionResult.text);
+      } else {
         throw new Error(
-          "No meaningful text content found in PDF. Please ensure your PDF is text-searchable."
+          "PDF processing failed. No text or images were extracted."
         );
       }
-
-      resumeData = await extractResumeFromText(extractionResult.text);
     } catch (error) {
       console.error("Resume parsing error:", error);
       return NextResponse.json(
@@ -181,7 +272,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare data for storage
     const processedData = {
-      pdfType: "text", // Always text for serverless
+      pdfType: extractionResult.pdfType || "text",
       pages: extractionResult.pageCount || 0,
       processingMethod,
       status: "processed",
@@ -192,7 +283,7 @@ export async function POST(request: NextRequest) {
     // Store metadata in database
     const resumeHistory = await prisma.resumeHistory.create({
       data: {
-        userId: session.user.id,
+        userId,
         fileName: file.name,
         resumeData: JSON.parse(JSON.stringify(processedData)),
       },
@@ -200,11 +291,11 @@ export async function POST(request: NextRequest) {
 
     // Deduct credits after successful processing
     const creditsDeducted = await deductCredits(
-      session.user.id,
+      userId,
       CREDIT_COST_PER_RESUME
     );
     if (!creditsDeducted) {
-      console.warn(`[Upload] Failed to deduct credits for user ${session.user.id}`);
+      console.warn(`[Upload] Failed to deduct credits for user ${userId}`);
     }
 
     return NextResponse.json({
@@ -219,6 +310,9 @@ export async function POST(request: NextRequest) {
         resumeData,
         creditsUsed: CREDIT_COST_PER_RESUME,
       },
+      message: processingMethod === "image" 
+        ? "Resume extracted from image-based PDF using Vision API" 
+        : "Resume extracted from text-based PDF",
     });
   } catch (error) {
     console.error("Upload error:", error);
