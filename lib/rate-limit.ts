@@ -6,7 +6,7 @@ interface RateLimitConfig {
 }
 
 const DEFAULT_CONFIG: RateLimitConfig = {
-  maxRequests: 10, // 10 uploads per hour
+  maxRequests: 40, // 40 uploads per hour
   windowMs: 60 * 60 * 1000, // 1 hour
 }
 

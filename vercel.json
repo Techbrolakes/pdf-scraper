@@ -3,5 +3,22 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "functions": {
+    "app/api/upload/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/upload",
+      "headers": [
+        {
+          "key": "x-vercel-max-duration",
+          "value": "60"
+        }
+      ]
+    }
+  ]
 }
