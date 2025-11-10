@@ -4,7 +4,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from "react";
 import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import { SpinnerIcon, UploadIcon, InfoIcon } from "@/components/icons";
-import { convertPDFToImagesClient } from "@/lib/pdf-client/pdf-to-image-client";
+import { convertPDFToImagesClient, ClientPDFConversionResult } from "@/lib/pdf/pdf-to-image-client";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const LARGE_FILE_THRESHOLD = 4 * 1024 * 1024; // 4MB
@@ -133,7 +133,7 @@ export function PDFUpload({
     }
   };
 
-  const uploadSmallFile = async (file: File, pdfData: any) => {
+  const uploadSmallFile = async (file: File, pdfData: ClientPDFConversionResult) => {
     const formData = new FormData();
     formData.append("file", file);
     
@@ -238,7 +238,7 @@ export function PDFUpload({
     }
   };
 
-  const uploadLargeFile = async (file: File, pdfData: any) => {
+  const uploadLargeFile = async (file: File, pdfData: ClientPDFConversionResult) => {
     const formData = new FormData();
     formData.append("file", file);
     
