@@ -1,17 +1,23 @@
 /**
- * PDF text extractor for serverless environments
- * Uses pdf2json - pure JavaScript PDF parser
- * 100% compatible with Vercel, Netlify, and other serverless platforms
+ * PDF text extractor with multi-strategy approach
+ * Strategy 1: pdf2json for text-based PDFs (serverless-compatible)
+ * Strategy 2: pdfjs-dist + canvas for image-based PDFs (converts to images for Vision API)
+ * Automatically detects PDF type and uses appropriate strategy
  */
 
 import PDFParser from 'pdf2json';
 import { promises as fs } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { analyzePDFType, type PDFType } from './pdf-type-detector';
+import { convertPDFToImages } from './pdf-to-image';
 
 export interface PDFProcessingResult {
   success: boolean;
   text?: string;
+  images?: string[]; // base64 encoded images for Vision API
   pageCount?: number;
+  pdfType?: PDFType;
+  processingMethod?: 'text' | 'image';
   error?: string;
   metadata?: Record<string, unknown>;
 }
@@ -19,8 +25,9 @@ export interface PDFProcessingResult {
 /**
  * Extract text from PDF using pdf2json library
  * Pure JavaScript implementation, serverless-compatible
+ * This is the fast path for text-based PDFs
  */
-export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingResult> {
+async function extractTextWithPdf2json(buffer: Buffer): Promise<PDFProcessingResult> {
   let tempFilePath: string | null = null;
 
   try {
@@ -41,7 +48,7 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingR
       };
     }
 
-    console.log('Using pdf2json for PDF text extraction (serverless-compatible)');
+    console.log('[pdf2json] Extracting text from PDF...');
 
     // Create temporary file for pdf2json
     const fileName = uuidv4();
@@ -95,9 +102,13 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingR
       };
     }
 
+    // Return with minimal text - caller will decide if fallback is needed
     return {
       success: false,
-      error: 'Unable to extract text from PDF. The file might be image-based or encrypted.',
+      error: 'Insufficient text content extracted',
+      metadata: {
+        textLength: extractedText?.length || 0,
+      },
     };
   } catch (error) {
     console.error('PDF extraction error:', error);
@@ -118,9 +129,10 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingR
       }
     }
     
+    // Return error - caller will decide if fallback is needed
     return {
       success: false,
-      error: 'Failed to process PDF. Please ensure the file is a valid, text-based PDF.',
+      error: error instanceof Error ? error.message : 'PDF extraction failed',
     };
   } finally {
     // Clean up temporary file
@@ -153,6 +165,79 @@ function cleanTextContent(text: string): string {
     .replace(/\n{3,}/g, '\n\n')
     // Trim whitespace
     .trim();
+}
+
+/**
+ * Main PDF extraction function with automatic strategy selection
+ * Analyzes PDF type and uses appropriate extraction method
+ */
+export async function extractTextFromPDF(buffer: Buffer): Promise<PDFProcessingResult> {
+  try {
+    // Validate buffer
+    const validation = validatePDFBuffer(buffer);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: validation.error || 'Invalid PDF',
+      };
+    }
+
+    console.log('[PDF Extractor] Analyzing PDF type...');
+    
+    // Analyze PDF to determine type
+    const analysis = await analyzePDFType(buffer);
+    console.log(`[PDF Extractor] PDF Type: ${analysis.type}, Pages: ${analysis.pageCount}, Text Density: ${analysis.textDensity.toFixed(1)}, Confidence: ${(analysis.confidence * 100).toFixed(0)}%`);
+
+    // Strategy 1: Try text extraction first for text-based and hybrid PDFs
+    if (analysis.type === 'text' || analysis.type === 'hybrid') {
+      console.log('[PDF Extractor] Attempting text extraction...');
+      const textResult = await extractTextWithPdf2json(buffer);
+      
+      // If text extraction succeeded with meaningful content, return it
+      if (textResult.success && textResult.text && textResult.text.length > 100) {
+        console.log(`[PDF Extractor] ✓ Text extraction successful (${textResult.text.length} chars)`);
+        return {
+          ...textResult,
+          pdfType: analysis.type,
+          processingMethod: 'text',
+        };
+      }
+      
+      console.log('[PDF Extractor] Text extraction insufficient, falling back to image processing...');
+    }
+
+    // Strategy 2: Convert to images for Vision API
+    console.log('[PDF Extractor] Converting PDF to images for Vision API...');
+    const imageResult = await convertPDFToImages(buffer);
+    
+    if (!imageResult.success || !imageResult.images || imageResult.images.length === 0) {
+      return {
+        success: false,
+        error: imageResult.error || 'Failed to process PDF. Unable to extract text or convert to images.',
+        pdfType: analysis.type,
+      };
+    }
+
+    console.log(`[PDF Extractor] ✓ Converted ${imageResult.images.length} pages to images`);
+    
+    return {
+      success: true,
+      images: imageResult.images,
+      pageCount: imageResult.pageCount,
+      pdfType: analysis.type,
+      processingMethod: 'image',
+      metadata: {
+        analysis,
+        imageCount: imageResult.images.length,
+      },
+    };
+  } catch (error) {
+    console.error('[PDF Extractor] Fatal error:', error);
+    return {
+      success: false,
+      error: 'An unexpected error occurred while processing the PDF',
+    };
+  }
 }
 
 /**

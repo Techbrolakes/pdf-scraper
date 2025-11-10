@@ -4,6 +4,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from "react";
 import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import { SpinnerIcon, UploadIcon, InfoIcon } from "@/components/icons";
+import { convertPDFToImagesClient, ClientPDFConversionResult } from "@/lib/pdf/pdf-to-image-client";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const LARGE_FILE_THRESHOLD = 4 * 1024 * 1024; // 4MB
@@ -57,19 +58,34 @@ export function PDFUpload({
     const isLargeFile = file.size > LARGE_FILE_THRESHOLD;
 
     try {
+      // First, process PDF client-side to extract text or convert to images
+      setUploadState({
+        isUploading: false,
+        isProcessing: true,
+        progress: 0,
+        message: "Processing PDF locally...",
+      });
+
+      // Convert PDF to images or extract text on client-side
+      const conversionResult = await convertPDFToImagesClient(file);
+      
+      if (!conversionResult.success) {
+        throw new Error(conversionResult.error || "Failed to process PDF");
+      }
+
       setUploadState({
         isUploading: true,
         isProcessing: false,
-        progress: 0,
-        message: "Uploading...",
+        progress: 10,
+        message: "Uploading processed data...",
       });
 
       if (isLargeFile) {
         // Use API route for large files
-        await uploadLargeFile(file);
+        await uploadLargeFile(file, conversionResult);
       } else {
         // Use Server Action for small files
-        await uploadSmallFile(file);
+        await uploadSmallFile(file, conversionResult);
       }
 
       setUploadState({
@@ -117,25 +133,35 @@ export function PDFUpload({
     }
   };
 
-  const uploadSmallFile = async (file: File) => {
+  const uploadSmallFile = async (file: File, pdfData: ClientPDFConversionResult) => {
     const formData = new FormData();
     formData.append("file", file);
+    
+    // Add processed data
+    if (pdfData.images) {
+      formData.append("processedImages", JSON.stringify(pdfData.images));
+      formData.append("pdfType", pdfData.pdfType || "image");
+    } else if (pdfData.text) {
+      formData.append("extractedText", pdfData.text);
+      formData.append("pdfType", "text");
+    }
+    formData.append("pageCount", String(pdfData.pageCount || 1));
 
     let progressInterval: NodeJS.Timeout | null = null;
     let analyzeInterval: NodeJS.Timeout | null = null;
     let extractInterval: NodeJS.Timeout | null = null;
 
     try {
-      // Phase 1: Uploading (0-30%)
+      // Phase 1: Uploading (10-40%)
       setUploadState((prev) => ({
         ...prev,
-        message: "Uploading PDF...",
-        progress: 0,
+        message: "Uploading processed data...",
+        progress: 10,
       }));
 
       progressInterval = setInterval(() => {
         setUploadState((prev) => {
-          if (prev.progress < 30) {
+          if (prev.progress < 40) {
             return { ...prev, progress: prev.progress + 2 };
           }
           return prev;
@@ -149,16 +175,16 @@ export function PDFUpload({
 
       if (progressInterval) clearInterval(progressInterval);
 
-      // Phase 2: Analyzing data (30-60%)
+      // Phase 2: Analyzing data (40-70%)
       setUploadState((prev) => ({
         ...prev,
-        message: "Analyzing data...",
-        progress: 30,
+        message: "Analyzing with AI...",
+        progress: 40,
       }));
 
       analyzeInterval = setInterval(() => {
         setUploadState((prev) => {
-          if (prev.progress < 60) {
+          if (prev.progress < 70) {
             return { ...prev, progress: prev.progress + 2 };
           }
           return prev;
@@ -178,11 +204,11 @@ export function PDFUpload({
 
       if (analyzeInterval) clearInterval(analyzeInterval);
 
-      // Phase 3: Extracting data (60-100%)
+      // Phase 3: Extracting resume data (70-100%)
       setUploadState((prev) => ({
         ...prev,
-        message: "Extracting data...",
-        progress: 60,
+        message: "Extracting resume data...",
+        progress: 70,
       }));
 
       extractInterval = setInterval(() => {
@@ -212,9 +238,19 @@ export function PDFUpload({
     }
   };
 
-  const uploadLargeFile = async (file: File) => {
+  const uploadLargeFile = async (file: File, pdfData: ClientPDFConversionResult) => {
     const formData = new FormData();
     formData.append("file", file);
+    
+    // Add processed data
+    if (pdfData.images) {
+      formData.append("processedImages", JSON.stringify(pdfData.images));
+      formData.append("pdfType", pdfData.pdfType || "image");
+    } else if (pdfData.text) {
+      formData.append("extractedText", pdfData.text);
+      formData.append("pdfType", "text");
+    }
+    formData.append("pageCount", String(pdfData.pageCount || 1));
 
     setUploadState((prev) => ({
       ...prev,
